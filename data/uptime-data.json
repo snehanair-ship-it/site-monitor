@@ -17,13 +17,20 @@
           "status": 200,
           "latency": 831,
           "error": null
+        },
+        {
+          "timestamp": "2026-03-31T10:37:28.997Z",
+          "success": true,
+          "status": 200,
+          "latency": 800,
+          "error": null
         }
       ],
       "incidents": [],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 2,
-        "successfulChecks": 2
+        "totalChecks": 3,
+        "successfulChecks": 3
       }
     },
     "https://preikestolenbasecamp.com": {
@@ -43,17 +50,24 @@
           "status": 200,
           "latency": 1231,
           "error": null
+        },
+        {
+          "timestamp": "2026-03-31T10:37:29.470Z",
+          "success": true,
+          "status": 200,
+          "latency": 1220,
+          "error": null
         }
       ],
       "incidents": [],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 2,
-        "successfulChecks": 2
+        "totalChecks": 3,
+        "successfulChecks": 3
       }
     }
   },
-  "lastUpdated": "2026-03-31T08:27:12.840Z",
+  "lastUpdated": "2026-03-31T10:37:30.216Z",
   "regionChecks": {
     "https://preikestolenbasecamp.com": [
       {
@@ -63,6 +77,24 @@
           "reachable": true,
           "status": 200,
           "latency": 490,
+          "error": null
+        },
+        "globalCheck": {
+          "checked": false,
+          "results": []
+        },
+        "ipBlockAnalysis": {
+          "blocked": false,
+          "analysis": "No multi-region data available."
+        }
+      },
+      {
+        "timestamp": "2026-03-31T10:37:30.165Z",
+        "runnerIP": "52.159.245.164",
+        "direct": {
+          "reachable": true,
+          "status": 200,
+          "latency": 463,
           "error": null
         },
         "globalCheck": {
@@ -492,6 +524,24 @@
               "statusCode": 0.0278999805450439
             }
           ]
+        }
+      },
+      {
+        "timestamp": "2026-03-31T10:37:29.894Z",
+        "runnerIP": "52.159.245.164",
+        "direct": {
+          "reachable": true,
+          "status": 200,
+          "latency": 600,
+          "error": null
+        },
+        "globalCheck": {
+          "checked": false,
+          "results": []
+        },
+        "ipBlockAnalysis": {
+          "blocked": false,
+          "analysis": "No multi-region data available."
         }
       }
     ]
