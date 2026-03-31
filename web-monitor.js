@@ -30,6 +30,7 @@ const { routeAlert, sendWeeklyDigest } = require('./alert-router');
 const { multiRegionCheck } = require('./multi-region');
 const { checkSLARisk, generateMonthlySLAReport } = require('./sla-tracker');
 const { generateSiteAnalytics } = require('./analytics');
+const aiops = require('./aiops');
 
 const LOG_PREFIX = '[site-monitor]';
 
@@ -453,6 +454,67 @@ async function monitorCycle() {
       }
     }
   }));
+
+  // --- AIOps analysis ---
+  try {
+    console.log(`${LOG_PREFIX} Running AIOps analysis...`);
+    const aiopsResult = await aiops.analyzeAll(data, sites);
+    data._aiops = aiopsResult;
+
+    // Send alerts for AIOps critical findings
+    for (const alert of aiopsResult.criticalAlerts || []) {
+      if (alert.severity === 'critical' && alert.site) {
+        const site = sites.find(s => s.name === alert.site || s.url === alert.url);
+        if (site && !state[site.url]?.aiopsAlerted?.[alert.type]) {
+          state[site.url] = state[site.url] || {};
+          state[site.url].aiopsAlerted = state[site.url].aiopsAlerted || {};
+          state[site.url].aiopsAlerted[alert.type] = true;
+
+          await sendAlert(
+            `${alert.site} — AIOps: ${alert.message}`,
+            `AIOps detected: ${alert.message}`,
+            {
+              type: alert.type === 'sla_breach' ? 'sla_risk' : 'trend',
+              site,
+              extraDetails: [
+                { label: 'AIOps Alert', value: alert.message, highlight: true },
+                { label: 'Type', value: alert.type, highlight: false },
+              ],
+            }
+          );
+        }
+      }
+    }
+
+    // Root cause analysis alert
+    if (aiopsResult.rootCauseAnalysis.severity === 'critical') {
+      const rca = aiopsResult.rootCauseAnalysis;
+      console.warn(`${LOG_PREFIX} RCA: ${rca.hypothesis}`);
+      // Alert first affected site's team
+      const firstSite = sites[0];
+      if (firstSite && !state._rcaAlerted) {
+        state._rcaAlerted = true;
+        await sendAlert(
+          `Root Cause Analysis — ${rca.hypothesis}`,
+          `AIOps RCA:\n${rca.hypothesis}\n\nFindings:\n${rca.findings.map(f => `- ${f.finding}`).join('\n')}`,
+          {
+            type: 'down',
+            site: firstSite,
+            extraDetails: [
+              { label: 'Hypothesis', value: rca.hypothesis, highlight: true },
+              ...rca.findings.map(f => ({ label: f.type, value: f.finding, highlight: f.severity === 'critical' })),
+            ],
+          }
+        );
+      }
+    } else {
+      state._rcaAlerted = false;
+    }
+
+    console.log(`${LOG_PREFIX} AIOps: ${aiopsResult.summary.overallHealth} (${aiopsResult.summary.totalAlerts} alerts)`);
+  } catch (err) {
+    console.error(`${LOG_PREFIX} AIOps analysis failed:`, err.message);
+  }
 
   // Save data and generate status page
   uptimeStore.saveData(data);

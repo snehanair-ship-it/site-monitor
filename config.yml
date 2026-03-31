@@ -1,13 +1,3 @@
-# =============================================================================
-# Site Monitor — Organisation-Wide Configuration
-# =============================================================================
-# Sites and teams can be managed via the dashboard UI.
-# Manual edits here are also supported.
-# =============================================================================
-
-# ---------------------------------------------------------------------------
-# Global settings
-# ---------------------------------------------------------------------------
 global:
   check_interval_minutes: 5
   vitals_interval_minutes: 30
@@ -17,15 +7,15 @@ global:
   weekly_digest_day: monday
   weekly_digest_hour: 9
   monthly_report_day: 1
-
-# ---------------------------------------------------------------------------
-# Teams — auto-created when adding sites via dashboard
-# ---------------------------------------------------------------------------
-teams: {}
-
-# ---------------------------------------------------------------------------
-# Sites — add via dashboard or manually here
-# ---------------------------------------------------------------------------
+teams:
+  internal:
+    name: Internal
+    members: []
+    slack_webhook: ''
+    escalation:
+      level_1_after_minutes: 0
+      level_2_after_minutes: 10
+      level_3_after_minutes: 30
 sites:
   - name: Equinavia
     url: https://equinavia.com
@@ -41,10 +31,9 @@ sites:
       - production
       - client
     vitals_enabled: true
-
   - name: Preikestolen
     url: https://preikestolenbasecamp.com
-    region: "no"
+    region: 'no'
     team: default
     sla_target: 99.5
     check_endpoints:
@@ -56,10 +45,18 @@ sites:
       - production
       - client
     vitals_enabled: true
-
-# ---------------------------------------------------------------------------
-# Multi-region monitoring
-# ---------------------------------------------------------------------------
+  - name: kodework
+    url: https://kodework.com
+    region: global
+    team: internal
+    sla_target: 99.9
+    check_endpoints:
+      - path: /
+        method: GET
+        expected_status: 200
+    auth: null
+    tags: []
+    vitals_enabled: true
 regions:
   us-east:
     name: US East
@@ -73,17 +70,9 @@ regions:
     name: Asia Pacific
     proxy_env: AP_PROXY_URL
     check_ip_url: https://api.ipify.org?format=json
-
-# ---------------------------------------------------------------------------
-# IP Block Detection
-# ---------------------------------------------------------------------------
 ip_block_detection:
   enabled: true
   block_threshold_percent: 50
-
-# ---------------------------------------------------------------------------
-# Thresholds for Core Web Vitals
-# ---------------------------------------------------------------------------
 thresholds:
   LCP: 2500
   FCP: 1800

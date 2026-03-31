@@ -97,11 +97,15 @@ export async function GET() {
     };
   });
 
+  // AIOps data (stored by monitor in _aiops key)
+  const aiopsData = (data as Record<string, unknown>)._aiops as Record<string, unknown> | undefined;
+
   return NextResponse.json({
     sites,
     lastUpdated: data.lastUpdated,
     totalSites: sites.length,
     sitesUp: sites.filter((s) => s.currentStatus === "up").length,
     sitesDown: sites.filter((s) => s.currentStatus === "down").length,
+    aiops: aiopsData || null,
   });
 }

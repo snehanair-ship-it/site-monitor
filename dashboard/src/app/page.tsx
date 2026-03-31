@@ -22,12 +22,46 @@ interface SiteStatus {
   regionCheck: Record<string, unknown> | null;
 }
 
+interface AIOpsAlert {
+  site?: string;
+  type: string;
+  severity: string;
+  message: string;
+}
+
+interface AIOpsData {
+  sites: Record<string, {
+    siteName: string;
+    predictions: {
+      latency: { prediction: number | null; reason: string; severity?: string; trend?: string; rateOfChange?: number; predictedBreachTime?: string };
+      sla: { prediction: number | null; reason: string; severity?: string; currentUptime?: number; projectedUptime?: number; willBreach?: boolean };
+      alerts: AIOpsAlert[];
+    };
+    anomalies: {
+      anomalies: { type: string; severity: string; message: string; value?: number; baseline?: number }[];
+      timeContext: string | null;
+    };
+    historicalMatch: { matchCount: number; message: string } | null;
+  }>;
+  rootCauseAnalysis: {
+    severity: string;
+    hypothesis: string;
+    findings: { type: string; severity: string; finding: string }[];
+    externalServices: { name: string; status: string; description: string; hasIssues: boolean }[];
+    causalChain: { chain: { site: string; position: string; delay?: number }[] } | null;
+  };
+  criticalAlerts: AIOpsAlert[];
+  summary: { overallHealth: string; totalAlerts: number; sitesWithAlerts: number };
+  timestamp: string;
+}
+
 interface StatusResponse {
   sites: SiteStatus[];
   lastUpdated: string | null;
   totalSites: number;
   sitesUp: number;
   sitesDown: number;
+  aiops: AIOpsData | null;
 }
 
 export default function Dashboard() {
@@ -126,6 +160,9 @@ export default function Dashboard() {
           />
         </div>
       )}
+
+      {/* AIOps Panel */}
+      {status?.aiops && <AIOpsPanel aiops={status.aiops} />}
 
       {/* Add Site Modal */}
       {showAddForm && (
@@ -553,6 +590,155 @@ function AddSiteForm({
           </div>
         </form>
       </div>
+    </div>
+  );
+}
+
+function AIOpsPanel({ aiops }: { aiops: AIOpsData }) {
+  const [expanded, setExpanded] = useState(false);
+  const health = aiops.summary?.overallHealth || "healthy";
+  const alertCount = aiops.summary?.totalAlerts || 0;
+
+  const healthColor = health === "critical" ? "border-red-300 bg-red-50" : health === "warning" ? "border-orange-300 bg-orange-50" : "border-green-300 bg-green-50";
+  const healthText = health === "critical" ? "text-red-700" : health === "warning" ? "text-orange-700" : "text-green-700";
+  const healthLabel = health === "critical" ? "Critical Issues Detected" : health === "warning" ? "Warnings Detected" : "All Systems Healthy";
+  const healthIcon = health === "critical" ? "!!" : health === "warning" ? "!" : "OK";
+
+  return (
+    <div className={`rounded-xl border p-5 mb-6 ${healthColor}`}>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <span className={`text-xs font-bold px-2 py-1 rounded ${health === "healthy" ? "bg-green-200 text-green-800" : health === "warning" ? "bg-orange-200 text-orange-800" : "bg-red-200 text-red-800"}`}>
+            AIOps {healthIcon}
+          </span>
+          <span className={`font-semibold ${healthText}`}>{healthLabel}</span>
+          {alertCount > 0 && (
+            <span className="text-xs bg-white/60 rounded-full px-2 py-0.5 text-slate-600">
+              {alertCount} alert{alertCount !== 1 ? "s" : ""}
+            </span>
+          )}
+        </div>
+        <button onClick={() => setExpanded(!expanded)} className="text-sm text-slate-500 hover:text-slate-700 cursor-pointer">
+          {expanded ? "Collapse" : "Details"}
+        </button>
+      </div>
+
+      {/* Root Cause Hypothesis */}
+      {aiops.rootCauseAnalysis && (
+        <div className="text-sm text-slate-700 mb-2">
+          <span className="font-medium">RCA:</span> {aiops.rootCauseAnalysis.hypothesis}
+        </div>
+      )}
+
+      {/* Critical Alerts Summary */}
+      {aiops.criticalAlerts?.length > 0 && (
+        <div className="space-y-1 mb-2">
+          {aiops.criticalAlerts.slice(0, 3).map((alert, i) => (
+            <div key={i} className={`text-xs px-3 py-1.5 rounded ${alert.severity === "critical" ? "bg-red-100 text-red-700" : "bg-orange-100 text-orange-700"}`}>
+              {alert.site && <span className="font-semibold">{alert.site}: </span>}
+              {alert.message}
+            </div>
+          ))}
+          {aiops.criticalAlerts.length > 3 && (
+            <div className="text-xs text-slate-500">+{aiops.criticalAlerts.length - 3} more</div>
+          )}
+        </div>
+      )}
+
+      {/* Expanded: Per-site details */}
+      {expanded && (
+        <div className="mt-4 pt-4 border-t border-slate-200/50 space-y-4">
+          {/* External Services */}
+          {aiops.rootCauseAnalysis?.externalServices?.length > 0 && (
+            <div>
+              <div className="text-xs font-semibold text-slate-500 mb-2">External Services</div>
+              <div className="flex gap-2 flex-wrap">
+                {aiops.rootCauseAnalysis.externalServices.map((svc, i) => (
+                  <span key={i} className={`text-xs px-2 py-1 rounded-full ${svc.hasIssues ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                    {svc.name}: {svc.description}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Per-site predictions */}
+          {Object.entries(aiops.sites || {}).map(([url, siteAI]) => (
+            <div key={url} className="bg-white/60 rounded-lg p-3">
+              <div className="font-semibold text-sm text-slate-800 mb-2">{siteAI.siteName}</div>
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                {/* Latency prediction */}
+                <div>
+                  <div className="text-slate-400 mb-0.5">Latency Forecast</div>
+                  <div className={siteAI.predictions.latency.severity === "critical" ? "text-red-600 font-medium" : siteAI.predictions.latency.severity === "warning" ? "text-orange-600 font-medium" : "text-slate-600"}>
+                    {siteAI.predictions.latency.reason}
+                  </div>
+                </div>
+                {/* SLA prediction */}
+                <div>
+                  <div className="text-slate-400 mb-0.5">SLA Forecast</div>
+                  <div className={siteAI.predictions.sla.severity === "critical" ? "text-red-600 font-medium" : siteAI.predictions.sla.severity === "warning" ? "text-orange-600 font-medium" : "text-slate-600"}>
+                    {siteAI.predictions.sla.reason}
+                  </div>
+                </div>
+              </div>
+              {/* Anomalies */}
+              {siteAI.anomalies.anomalies.length > 0 && (
+                <div className="mt-2">
+                  <div className="text-slate-400 text-xs mb-1">Anomalies</div>
+                  {siteAI.anomalies.anomalies.map((a, i) => (
+                    <div key={i} className={`text-xs px-2 py-1 rounded mb-1 ${a.severity === "critical" ? "bg-red-50 text-red-700" : a.severity === "warning" ? "bg-orange-50 text-orange-700" : "bg-slate-50 text-slate-600"}`}>
+                      {a.message}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {siteAI.anomalies.timeContext && (
+                <div className="text-xs text-slate-400 mt-1">{siteAI.anomalies.timeContext}</div>
+              )}
+              {siteAI.historicalMatch && (
+                <div className="text-xs text-orange-600 mt-1">{siteAI.historicalMatch.message}</div>
+              )}
+            </div>
+          ))}
+
+          {/* Causal Chain */}
+          {aiops.rootCauseAnalysis?.causalChain && (
+            <div>
+              <div className="text-xs font-semibold text-slate-500 mb-2">Causal Chain</div>
+              <div className="flex items-center gap-2 flex-wrap">
+                {aiops.rootCauseAnalysis.causalChain.chain.map((node, i) => (
+                  <div key={i} className="flex items-center gap-1">
+                    {i > 0 && <span className="text-slate-300">&rarr;</span>}
+                    <span className={`text-xs px-2 py-1 rounded ${node.position === "origin" ? "bg-red-100 text-red-700 font-medium" : "bg-orange-100 text-orange-700"}`}>
+                      {node.site}
+                      {node.delay != null && <span className="text-[10px] text-slate-400 ml-1">(+{Math.round(node.delay / 1000)}s)</span>}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* RCA Findings */}
+          {aiops.rootCauseAnalysis?.findings?.length > 0 && (
+            <div>
+              <div className="text-xs font-semibold text-slate-500 mb-2">Findings</div>
+              {aiops.rootCauseAnalysis.findings.map((f, i) => (
+                <div key={i} className={`text-xs px-3 py-2 rounded mb-1 ${f.severity === "critical" ? "bg-red-50 text-red-700" : "bg-orange-50 text-orange-700"}`}>
+                  <span className="font-medium">[{f.type}]</span> {f.finding}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {aiops.timestamp && (
+            <div className="text-[10px] text-slate-400 text-right">
+              Analysis: {new Date(aiops.timestamp).toLocaleString()}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
