@@ -10,7 +10,7 @@ A lightweight Node.js monitor for uptime + Core Web Vitals + email alerts.
 3. Create `.env`:
 
 ```
-SITES="US Site|https://example.com|us,Norway Site|https://example.no|no"
+SITES="Equinavia|https://equinavia.com|us,Preikestolen|https://preikestolenbasecamp.com|no"
 
 # Optional: Google PageSpeed Insights API key (free quota, recommended)
 PSI_API_KEY=
@@ -58,3 +58,4 @@ npm run start
 - Add `PSI_API_KEY` to avoid API limits.
 - For production, use a process manager (`pm2`, systemd) or container.
 - If you need SMS/Slack, wrap `sendAlert` with extra channels.
+
