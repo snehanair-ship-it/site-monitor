@@ -31,6 +31,7 @@ const { multiRegionCheck } = require('./multi-region');
 const { checkSLARisk, generateMonthlySLAReport } = require('./sla-tracker');
 const { generateSiteAnalytics } = require('./analytics');
 const aiops = require('./aiops');
+const { scanAllSites } = require('./security-scanner');
 
 const LOG_PREFIX = '[site-monitor]';
 
@@ -514,6 +515,56 @@ async function monitorCycle() {
     console.log(`${LOG_PREFIX} AIOps: ${aiopsResult.summary.overallHealth} (${aiopsResult.summary.totalAlerts} alerts)`);
   } catch (err) {
     console.error(`${LOG_PREFIX} AIOps analysis failed:`, err.message);
+  }
+
+  // --- Security scan (every 6 hours or on --once with --security) ---
+  const securityInterval = 6 * 60 * 60 * 1000;
+  const lastSecScan = state._lastSecurityScan || 0;
+  const runSecurity = process.argv.includes('--security') || (Date.now() - lastSecScan >= securityInterval);
+
+  if (runSecurity) {
+    try {
+      console.log(`${LOG_PREFIX} Running security scan...`);
+      const secResults = await scanAllSites(sites, TIMEOUT_MS);
+      data._security = secResults;
+      state._lastSecurityScan = Date.now();
+
+      // Alert on critical/high vulnerabilities
+      for (const [url, result] of Object.entries(secResults.sites)) {
+        if (result.riskLevel === 'critical' || result.riskLevel === 'high') {
+          const site = sites.find(s => s.url === url);
+          if (site) {
+            const vulnList = result.vulnerabilities
+              .filter(v => v.severity === 'critical' || v.severity === 'high')
+              .map(v => `[${v.severity.toUpperCase()}] ${v.name}: ${v.finding}`)
+              .join('\n');
+
+            await sendAlert(
+              `${result.site} — Security: ${result.summary.vulnerabilities} vulnerabilities found`,
+              `Security scan found ${result.summary.vulnerabilities} vulnerabilities:\n${vulnList}`,
+              {
+                type: 'down',
+                site,
+                extraDetails: [
+                  { label: 'Risk Level', value: result.riskLevel.toUpperCase(), highlight: true },
+                  { label: 'Vulnerabilities', value: `${result.summary.critical} critical, ${result.summary.high} high, ${result.summary.medium} medium`, highlight: result.summary.critical > 0 },
+                  { label: 'Header Score', value: `${result.headers.score}/100`, highlight: result.headers.score < 50 },
+                  ...result.vulnerabilities.slice(0, 5).map(v => ({
+                    label: v.severity.toUpperCase(),
+                    value: `${v.name} — ${v.recommendation}`,
+                    highlight: v.severity === 'critical',
+                  })),
+                ],
+              }
+            );
+          }
+        }
+      }
+
+      console.log(`${LOG_PREFIX} Security: ${secResults.overall.totalVulnerabilities} vulns, worst=${secResults.overall.worstRiskLevel}, avg header score=${secResults.overall.avgHeaderScore}/100`);
+    } catch (err) {
+      console.error(`${LOG_PREFIX} Security scan failed:`, err.message);
+    }
   }
 
   // Save data and generate status page

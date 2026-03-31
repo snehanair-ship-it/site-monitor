@@ -55,6 +55,51 @@ interface AIOpsData {
   timestamp: string;
 }
 
+interface SecurityVuln {
+  name: string;
+  path: string;
+  severity: string;
+  finding: string;
+  recommendation: string;
+  status: number;
+}
+
+interface SecuritySiteResult {
+  site: string;
+  url: string;
+  riskLevel: string;
+  vulnerabilities: SecurityVuln[];
+  exposedEndpoints: { name: string; path: string; finding: string; severity: string }[];
+  headers: {
+    score: number;
+    missing: { name: string; severity: string; recommendation: string }[];
+    present: { name: string; value: string }[];
+    disclosures: { name: string; header: string; value: string; recommendation: string }[];
+  };
+  summary: {
+    endpointsChecked: number;
+    vulnerabilities: number;
+    critical: number;
+    high: number;
+    medium: number;
+    headersPresent: number;
+    headersMissing: number;
+    infoDisclosures: number;
+  };
+  timestamp: string;
+}
+
+interface SecurityData {
+  sites: Record<string, SecuritySiteResult>;
+  overall: {
+    totalSites: number;
+    totalVulnerabilities: number;
+    worstRiskLevel: string;
+    avgHeaderScore: number;
+  };
+  timestamp: string;
+}
+
 interface StatusResponse {
   sites: SiteStatus[];
   lastUpdated: string | null;
@@ -62,6 +107,7 @@ interface StatusResponse {
   sitesUp: number;
   sitesDown: number;
   aiops: AIOpsData | null;
+  security: SecurityData | null;
 }
 
 export default function Dashboard() {
@@ -163,6 +209,9 @@ export default function Dashboard() {
 
       {/* AIOps Panel */}
       {status?.aiops && <AIOpsPanel aiops={status.aiops} />}
+
+      {/* Security Panel */}
+      {status?.security && <SecurityPanel security={status.security} />}
 
       {/* Add Site Modal */}
       {showAddForm && (
@@ -735,6 +784,144 @@ function AIOpsPanel({ aiops }: { aiops: AIOpsData }) {
           {aiops.timestamp && (
             <div className="text-[10px] text-slate-400 text-right">
               Analysis: {new Date(aiops.timestamp).toLocaleString()}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SecurityPanel({ security }: { security: SecurityData }) {
+  const [expanded, setExpanded] = useState(false);
+  const [selectedSite, setSelectedSite] = useState<string | null>(null);
+
+  const risk = security.overall?.worstRiskLevel || "low";
+  const riskColor = risk === "critical" ? "border-red-300 bg-red-50" : risk === "high" ? "border-orange-300 bg-orange-50" : risk === "medium" ? "border-yellow-300 bg-yellow-50" : "border-green-300 bg-green-50";
+  const riskText = risk === "critical" ? "text-red-700" : risk === "high" ? "text-orange-700" : risk === "medium" ? "text-yellow-700" : "text-green-700";
+  const riskLabel = risk === "low" ? "No Issues Found" : `${risk.charAt(0).toUpperCase() + risk.slice(1)} Risk`;
+
+  const siteEntries = Object.entries(security.sites || {});
+
+  return (
+    <div className={`rounded-xl border p-5 mb-6 ${riskColor}`}>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <span className={`text-xs font-bold px-2 py-1 rounded ${risk === "low" ? "bg-green-200 text-green-800" : risk === "medium" ? "bg-yellow-200 text-yellow-800" : risk === "high" ? "bg-orange-200 text-orange-800" : "bg-red-200 text-red-800"}`}>
+            Security
+          </span>
+          <span className={`font-semibold ${riskText}`}>{riskLabel}</span>
+          <span className="text-xs bg-white/60 rounded-full px-2 py-0.5 text-slate-600">
+            {security.overall?.totalVulnerabilities || 0} vuln{security.overall?.totalVulnerabilities !== 1 ? "s" : ""} &middot; Avg header score: {security.overall?.avgHeaderScore || 0}/100
+          </span>
+        </div>
+        <button onClick={() => setExpanded(!expanded)} className="text-sm text-slate-500 hover:text-slate-700 cursor-pointer">
+          {expanded ? "Collapse" : "Details"}
+        </button>
+      </div>
+
+      {/* Quick summary per site */}
+      <div className="flex gap-2 flex-wrap">
+        {siteEntries.map(([url, result]) => {
+          const rc = result.riskLevel;
+          const c = rc === "critical" ? "bg-red-100 text-red-700 border-red-200" : rc === "high" ? "bg-orange-100 text-orange-700 border-orange-200" : rc === "medium" ? "bg-yellow-100 text-yellow-700 border-yellow-200" : "bg-green-100 text-green-700 border-green-200";
+          return (
+            <button key={url} onClick={() => { setSelectedSite(selectedSite === url ? null : url); setExpanded(true); }}
+              className={`text-xs px-3 py-1.5 rounded-lg border cursor-pointer ${c} ${selectedSite === url ? "ring-2 ring-slate-400" : ""}`}>
+              {result.site}: {result.summary.vulnerabilities} vulns, headers {result.headers.score}/100
+            </button>
+          );
+        })}
+      </div>
+
+      {expanded && (
+        <div className="mt-4 pt-4 border-t border-slate-200/50 space-y-3">
+          {siteEntries.filter(([url]) => !selectedSite || url === selectedSite).map(([url, result]) => (
+            <div key={url} className="bg-white/60 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="font-semibold text-sm text-slate-800">{result.site}</div>
+                <div className="flex gap-2 text-xs">
+                  <span className="bg-slate-100 rounded px-2 py-0.5">{result.summary.endpointsChecked} endpoints checked</span>
+                  <span className={`rounded px-2 py-0.5 ${result.summary.critical > 0 ? "bg-red-100 text-red-700" : result.summary.high > 0 ? "bg-orange-100 text-orange-700" : "bg-green-100 text-green-700"}`}>
+                    {result.summary.critical} critical, {result.summary.high} high, {result.summary.medium} medium
+                  </span>
+                </div>
+              </div>
+
+              {/* Vulnerabilities */}
+              {result.vulnerabilities.length > 0 && (
+                <div className="mb-3">
+                  <div className="text-xs font-semibold text-slate-500 mb-1">Vulnerabilities</div>
+                  {result.vulnerabilities.map((v, i) => (
+                    <div key={i} className={`text-xs px-3 py-2 rounded mb-1 ${v.severity === "critical" ? "bg-red-50 text-red-800 border border-red-200" : v.severity === "high" ? "bg-orange-50 text-orange-800 border border-orange-200" : "bg-yellow-50 text-yellow-800 border border-yellow-200"}`}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`font-bold uppercase text-[10px] px-1.5 py-0.5 rounded ${v.severity === "critical" ? "bg-red-200" : v.severity === "high" ? "bg-orange-200" : "bg-yellow-200"}`}>{v.severity}</span>
+                        <span className="font-semibold">{v.name}</span>
+                        <span className="text-slate-400 font-mono">{v.path} → HTTP {v.status}</span>
+                      </div>
+                      <div>{v.finding}</div>
+                      <div className="mt-1 text-slate-600 italic">Fix: {v.recommendation}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {result.vulnerabilities.length === 0 && (
+                <div className="text-xs text-green-600 mb-3">No vulnerable endpoints found.</div>
+              )}
+
+              {/* Exposed endpoints (informational) */}
+              {result.exposedEndpoints.length > 0 && (
+                <div className="mb-3">
+                  <div className="text-xs font-semibold text-slate-500 mb-1">Exposed Endpoints (Info)</div>
+                  {result.exposedEndpoints.map((e, i) => (
+                    <div key={i} className="text-xs bg-blue-50 text-blue-800 px-3 py-1.5 rounded mb-1">
+                      {e.name} ({e.path}) — {e.finding}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Security Headers */}
+              <div className="mb-2">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-semibold text-slate-500">Security Headers</span>
+                  <span className={`text-xs font-bold ${result.headers.score >= 70 ? "text-green-600" : result.headers.score >= 40 ? "text-orange-600" : "text-red-600"}`}>
+                    Score: {result.headers.score}/100
+                  </span>
+                </div>
+                <div className="bg-slate-200 rounded-full h-2 overflow-hidden mb-2">
+                  <div className={`h-full rounded-full ${result.headers.score >= 70 ? "bg-green-500" : result.headers.score >= 40 ? "bg-orange-400" : "bg-red-500"}`}
+                    style={{ width: `${result.headers.score}%` }} />
+                </div>
+                {result.headers.missing.length > 0 && (
+                  <div className="space-y-1">
+                    {result.headers.missing.map((h, i) => (
+                      <div key={i} className={`text-xs px-2 py-1 rounded ${h.severity === "high" ? "bg-orange-50 text-orange-700" : "bg-yellow-50 text-yellow-700"}`}>
+                        Missing: <span className="font-semibold">{h.name}</span> — {h.recommendation}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Info disclosures */}
+              {result.headers.disclosures.length > 0 && (
+                <div>
+                  <div className="text-xs font-semibold text-slate-500 mb-1">Information Disclosure</div>
+                  {result.headers.disclosures.map((d, i) => (
+                    <div key={i} className="text-xs bg-slate-50 text-slate-600 px-2 py-1 rounded mb-1">
+                      <span className="font-mono">{d.header}: {d.value}</span> — {d.recommendation}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+
+          {security.timestamp && (
+            <div className="text-[10px] text-slate-400 text-right">
+              Last scan: {new Date(security.timestamp).toLocaleString()}
             </div>
           )}
         </div>
