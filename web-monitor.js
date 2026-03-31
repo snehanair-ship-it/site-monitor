@@ -1,73 +1,83 @@
 #!/usr/bin/env node
 
 /**
- * Simple monitor (uptime + core web vitals via PageSpeed Insights) + email alert.
+ * Organisation-wide site monitor with:
+ * - Uptime monitoring with persistent history
+ * - Multi-region checks and IP block detection
+ * - Team-based alert routing with escalation
+ * - Core Web Vitals tracking
+ * - SLA tracking and monthly reports
+ * - Historical analytics and trend analysis
+ * - Authentication-aware endpoint checks
+ * - Status page dashboard (GitHub Pages)
  *
  * Usage:
- * 1) npm install
- * 2) create .env (see README)
- * 3) npm run start
- *
- * The job runs every 5 minutes; Core Web Vitals are fetched every 30 minutes.
+ *   node web-monitor.js             # continuous mode (cron)
+ *   node web-monitor.js --once      # single check cycle (CI)
+ *   node web-monitor.js --report    # generate SLA report
+ *   node web-monitor.js --digest    # send weekly digest
  */
 
 require('dotenv').config();
 const fetch = globalThis.fetch || require('node-fetch');
-const nodemailer = require('nodemailer');
 const cron = require('node-cron');
+
+// Modules
+const { loadConfig, getAuthHeaders, getThresholds, getGlobal, getIPBlockConfig } = require('./config-loader');
 const uptimeStore = require('./uptime-store');
 const { generateStatusPage } = require('./status-page');
+const { routeAlert, sendWeeklyDigest } = require('./alert-router');
+const { multiRegionCheck } = require('./multi-region');
+const { checkSLARisk, generateMonthlySLAReport } = require('./sla-tracker');
+const { generateSiteAnalytics } = require('./analytics');
 
 const LOG_PREFIX = '[site-monitor]';
-const WATCH_INTERVAL_MINUTES = Number(process.env.INTERVAL_MINUTES || 5);
-const VITALS_INTERVAL_MINUTES = Number(process.env.VITALS_MINUTES || 30);
 
-const sites = (process.env.SITES || "").split(',').map(item => {
-  const [name, url, locale] = item.split('|').map(t => t?.trim());
-  return url ? { name: name || url, url, locale: locale || 'global' } : null;
-}).filter(Boolean);
+// Load config
+let config;
+try {
+  config = loadConfig();
+} catch (err) {
+  console.error(`${LOG_PREFIX} Failed to load config:`, err.message);
+  process.exit(1);
+}
+
+const globalConfig = getGlobal();
+const thresholds = getThresholds();
+const sites = config.sites || [];
+const WATCH_INTERVAL_MINUTES = Number(process.env.INTERVAL_MINUTES || globalConfig.check_interval_minutes || 5);
+const VITALS_INTERVAL_MINUTES = Number(process.env.VITALS_MINUTES || globalConfig.vitals_interval_minutes || 30);
+const TIMEOUT_MS = Number(process.env.TIMEOUT_MS || globalConfig.timeout_ms || 20000);
 
 if (!sites.length) {
-  console.error(`${LOG_PREFIX} No sites configured. Set SITES in .env (example in README).`);
+  console.error(`${LOG_PREFIX} No sites configured in config.yml.`);
   process.exit(1);
 }
 
-const emailConfig = {
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT || 587),
-  secure: String(process.env.SMTP_SECURE || 'false').toLowerCase() === 'true',
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-};
-
-if (!emailConfig.host || !emailConfig.auth.user || !emailConfig.auth.pass || !process.env.ALERT_TO) {
-  console.error(`${LOG_PREFIX} Missing email config in .env (SMTP_HOST, SMTP_USER, SMTP_PASS, ALERT_TO).`);
-  process.exit(1);
+// Validate email config
+if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+  console.warn(`${LOG_PREFIX} SMTP not fully configured. Email alerts will be skipped.`);
 }
-
-const transporter = nodemailer.createTransport(emailConfig);
 
 const state = {};
-
-const thresholds = {
-  LCP: Number(process.env.THRESHOLD_LCP || 2500),
-  FCP: Number(process.env.THRESHOLD_FCP || 1800),
-  CLS: Number(process.env.THRESHOLD_CLS || 0.1),
-  TBT: Number(process.env.THRESHOLD_TBT || 300),
-};
 
 function now() {
   return new Date().toISOString();
 }
 
-async function fetchWithTimeout(url, ms = 10000) {
+// -------------------------------------------------------------------------
+// Availability check (with auth support)
+// -------------------------------------------------------------------------
+async function fetchWithTimeout(url, ms, headers = {}) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), ms);
   try {
     const start = Date.now();
-    const res = await fetch(url, { signal: controller.signal, redirect: 'follow' });
+    const res = await fetch(url, {
+      signal: controller.signal,
+      redirect: 'follow',
+      headers,
+    });
     const latency = Date.now() - start;
     return { ok: res.ok, status: res.status, statusText: res.statusText, latency, headers: res.headers };
   } finally {
@@ -76,14 +86,37 @@ async function fetchWithTimeout(url, ms = 10000) {
 }
 
 async function checkAvailability(site) {
-  try {
-    const checked = await fetchWithTimeout(site.url, Number(process.env.TIMEOUT_MS || 20000));
-    return { success: checked.ok && checked.status < 500, detail: checked };
-  } catch (err) {
-    return { success: false, error: err?.message || String(err) };
+  const authHeaders = getAuthHeaders(site);
+  const endpoints = site.check_endpoints || [{ path: '/', method: 'GET', expected_status: 200 }];
+
+  // Check all configured endpoints
+  const results = [];
+  for (const endpoint of endpoints) {
+    const url = new URL(endpoint.path, site.url).href;
+    try {
+      const checked = await fetchWithTimeout(url, TIMEOUT_MS, authHeaders);
+      const expectedStatus = endpoint.expected_status || 200;
+      const success = checked.ok && checked.status < 500 &&
+        (expectedStatus ? checked.status === expectedStatus : true);
+      results.push({ endpoint: endpoint.path, success, detail: checked });
+    } catch (err) {
+      results.push({ endpoint: endpoint.path, success: false, error: err?.message || String(err) });
+    }
   }
+
+  // Site is up if primary endpoint (first) is successful
+  const primary = results[0];
+  return {
+    success: primary.success,
+    detail: primary.detail,
+    error: primary.error,
+    endpoints: results,
+  };
 }
 
+// -------------------------------------------------------------------------
+// Core Web Vitals
+// -------------------------------------------------------------------------
 async function fetchCoreWebVitals(site) {
   const apiKey = process.env.PSI_API_KEY || '';
   const params = new URLSearchParams({ url: site.url, strategy: process.env.PSI_STRATEGY || 'mobile' });
@@ -91,14 +124,11 @@ async function fetchCoreWebVitals(site) {
   const endpoint = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?${params}`;
 
   const resp = await fetch(endpoint, { timeout: 25000 });
-  if (!resp.ok) {
-    throw new Error(`PageSpeed API failed with status ${resp.status}`);
-  }
+  if (!resp.ok) throw new Error(`PageSpeed API failed with status ${resp.status}`);
+
   const payload = await resp.json();
   const audits = payload?.lighthouseResult?.audits;
-  if (!audits) {
-    throw new Error('PageSpeed API response missing lighthouseResult.audits');
-  }
+  if (!audits) throw new Error('PageSpeed API response missing lighthouseResult.audits');
 
   return {
     LCP: audits['largest-contentful-paint']?.numericValue || null,
@@ -119,8 +149,12 @@ function isVitalsBad(vitals) {
   );
 }
 
+// -------------------------------------------------------------------------
+// Severity & recommendations (for email HTML)
+// -------------------------------------------------------------------------
 function getSeverity(type, detail) {
   if (type === 'down') return { level: 'CRITICAL', color: '#d32f2f', bg: '#fdecea', icon: '🔴' };
+  if (type === 'ip_block') return { level: 'CRITICAL', color: '#d32f2f', bg: '#fdecea', icon: '🚫' };
   if (type === 'vitals') {
     const scores = [];
     if (detail.LCP > thresholds.LCP * 1.5) scores.push('LCP');
@@ -130,7 +164,9 @@ function getSeverity(type, detail) {
     if (scores.length >= 2) return { level: 'CRITICAL', color: '#d32f2f', bg: '#fdecea', icon: '🔴' };
     return { level: 'WARNING', color: '#ed6c02', bg: '#fff4e5', icon: '🟡' };
   }
+  if (type === 'sla_risk') return { level: 'WARNING', color: '#ed6c02', bg: '#fff4e5', icon: '⚠️' };
   if (type === 'recovery') return { level: 'RESOLVED', color: '#2e7d32', bg: '#edf7ed', icon: '🟢' };
+  if (type === 'trend') return { level: 'INFO', color: '#0288d1', bg: '#e5f6fd', icon: '📊' };
   return { level: 'INFO', color: '#0288d1', bg: '#e5f6fd', icon: '🔵' };
 }
 
@@ -143,6 +179,13 @@ function getRecommendations(type, detail) {
     recs.push('Inspect server logs for errors (e.g. 502, 503, connection refused).');
     recs.push('Confirm CDN or reverse proxy (e.g. Cloudflare, Nginx) is routing correctly.');
     recs.push('If the issue persists beyond 10 minutes, escalate to the hosting provider.');
+  }
+  if (type === 'ip_block') {
+    recs.push('Site is reachable from some regions but blocked from others — possible IP/geo-restriction.');
+    recs.push('Check firewall rules, WAF settings (Cloudflare, AWS WAF), and rate-limiting policies.');
+    recs.push('Verify no recent IP bans were applied that affect legitimate traffic.');
+    recs.push('Check if the hosting provider or CDN is blocking specific country/region IPs.');
+    recs.push('Review server access logs for 403/429 patterns from affected regions.');
   }
   if (type === 'vitals') {
     if (detail.LCP && detail.LCP > thresholds.LCP) {
@@ -160,6 +203,11 @@ function getRecommendations(type, detail) {
     if (detail.performanceScore !== null && detail.performanceScore < 0.5) {
       recs.push('Overall performance score is below 50 — a full Lighthouse audit and performance sprint is recommended.');
     }
+  }
+  if (type === 'sla_risk') {
+    recs.push('SLA target is at risk of being breached this month.');
+    recs.push('Review recent incidents and address root causes immediately.');
+    recs.push('Consider scaling infrastructure or enabling redundancy.');
   }
   return recs;
 }
@@ -200,12 +248,14 @@ function buildHtmlEmail({ siteName, siteUrl, severity, timestamp, details, recom
   </div>`;
 }
 
-async function sendAlert(subject, text, { type = 'info', site = {}, vitals = null } = {}) {
-  const recipients = process.env.ALERT_TO.split(',').map(v => v.trim()).filter(Boolean);
+// -------------------------------------------------------------------------
+// Unified alert sender (routes to team + builds HTML)
+// -------------------------------------------------------------------------
+async function sendAlert(subject, text, { type = 'info', site = {}, vitals = null, extraDetails = [] } = {}) {
   const severity = getSeverity(type, vitals || {});
   const timestamp = now();
 
-  const details = [];
+  const details = [...extraDetails];
   if (type === 'down') {
     details.push({ label: 'Status', value: 'UNREACHABLE / DOWN', highlight: true });
     details.push({ label: 'Error', value: text, highlight: false });
@@ -224,85 +274,182 @@ async function sendAlert(subject, text, { type = 'info', site = {}, vitals = nul
   const html = buildHtmlEmail({
     siteName: site.name || 'Unknown',
     siteUrl: site.url || '',
-    type,
     severity,
     timestamp,
     details,
     recommendations,
   });
 
-  const mail = {
-    from: process.env.SMTP_FROM || emailConfig.auth.user,
-    to: recipients,
-    subject: `${severity.icon} [${severity.level}] ${subject}`,
-    text,
-    html,
-  };
+  // Get incident start time for escalation calculation
+  const data = uptimeStore.loadData();
+  const siteStore = data.sites?.[site.url];
+  const incidentStartedAt = siteStore?.currentIncident?.startedAt || null;
 
-  const result = await transporter.sendMail(mail);
-  console.log(`${LOG_PREFIX} Alert sent: ${subject} (${result.messageId})`);
+  try {
+    await routeAlert({
+      site,
+      subject: `${severity.icon} [${severity.level}] ${subject}`,
+      text,
+      html,
+      type,
+      severity,
+      details,
+      incidentStartedAt,
+    });
+  } catch (err) {
+    console.error(`${LOG_PREFIX} Alert routing failed:`, err.message);
+    // Fallback: log the alert
+    console.error(`${LOG_PREFIX} ALERT: ${subject} — ${text}`);
+  }
 }
 
+// -------------------------------------------------------------------------
+// Main monitor cycle
+// -------------------------------------------------------------------------
 async function monitorCycle() {
   console.log(`${LOG_PREFIX} Starting check cycle at ${now()}`);
   const data = uptimeStore.loadData();
+  const ipBlockConfig = getIPBlockConfig();
 
   await Promise.all(sites.map(async site => {
-    const currentState = state[site.url] = state[site.url] || { downCount: 0, lastVitals: null };
-    const availability = await checkAvailability(site);
+    const currentState = state[site.url] = state[site.url] || { downCount: 0, lastVitals: null, lastRegionCheck: 0 };
 
-    // Record check in persistent store
+    // --- Availability check (with auth) ---
+    const availability = await checkAvailability(site);
     uptimeStore.recordCheck(data, site, availability);
 
     if (!availability.success) {
       currentState.downCount += 1;
       console.warn(`${LOG_PREFIX} ${site.name} DOWN (#${currentState.downCount}):`, availability.error || availability.detail?.status);
 
-      if (currentState.downCount === 1 || currentState.downCount % Number(process.env.REPEAT_ALERT_EVERY || 3) === 0) {
+      const repeatEvery = Number(process.env.REPEAT_ALERT_EVERY || globalConfig.repeat_alert_every || 3);
+      if (currentState.downCount === 1 || currentState.downCount % repeatEvery === 0) {
         await sendAlert(
           `${site.name} (${site.url}) is DOWN`,
           `${site.name} is down at ${now()}\nError: ${availability.error || availability.detail?.statusText}`,
           { type: 'down', site }
         );
       }
-      return;
+    } else {
+      // Site is reachable
+      if (currentState.downCount > 0) {
+        await sendAlert(
+          `${site.name} back online`,
+          `${site.name} is back up at ${now()} (status ${availability.detail.status})`,
+          { type: 'recovery', site }
+        );
+      }
+      currentState.downCount = 0;
+      console.info(`${LOG_PREFIX} ${site.name} UP (${availability.detail.status}) latency=${availability.detail.latency}ms`);
     }
 
-    // site is reachable
-    if (currentState.downCount > 0) {
-      await sendAlert(
-        `${site.name} back online`,
-        `${site.name} is back up at ${now()} (status ${availability.detail.status})`,
-        { type: 'recovery', site }
-      );
-    }
-    currentState.downCount = 0;
-    console.info(`${LOG_PREFIX} ${site.name} UP (${availability.detail.status}) latency=${availability.detail.latency}ms`);
+    // --- Multi-region / IP block detection ---
+    if (ipBlockConfig.enabled) {
+      const regionCheckAge = (Date.now() - currentState.lastRegionCheck) / 60000;
+      // Run region check every 30 minutes or on first run
+      if (regionCheckAge >= 30 || currentState.lastRegionCheck === 0) {
+        try {
+          console.log(`${LOG_PREFIX} ${site.name} Running multi-region check...`);
+          const regionResult = await multiRegionCheck(site, TIMEOUT_MS);
+          uptimeStore.recordRegionCheck(data, site, regionResult);
+          currentState.lastRegionCheck = Date.now();
 
-    // core web vitals check every VITALS_INTERVAL_MINUTES
-    const lastVitals = currentState.lastVitals || { when: 0 };
-    const ageMin = (Date.now() - lastVitals.when) / 60000;
+          if (regionResult.ipBlockAnalysis.blocked || regionResult.ipBlockAnalysis.partialBlock) {
+            const analysis = regionResult.ipBlockAnalysis;
+            console.warn(`${LOG_PREFIX} ${site.name} IP BLOCK DETECTED:`, analysis.analysis);
 
-    if (ageMin >= VITALS_INTERVAL_MINUTES) {
-      try {
-        const vitals = await fetchCoreWebVitals(site);
-        currentState.lastVitals = { when: Date.now(), vitals };
-
-        // Record vitals in persistent store
-        uptimeStore.recordVitals(data, site, vitals);
-
-        if (isVitalsBad(vitals)) {
-          console.warn(`${LOG_PREFIX} ${site.name} bad CWV`, vitals);
-          await sendAlert(
-            `${site.name} Core Web Vitals degraded`,
-            `${site.name} core web vitals cross threshold at ${now()}\nLCP=${vitals.LCP}ms, FCP=${vitals.FCP}ms, CLS=${vitals.CLS}, TBT=${vitals.TBT}, score=${vitals.performanceScore}`,
-            { type: 'vitals', site, vitals }
-          );
-        } else {
-          console.log(`${LOG_PREFIX} ${site.name} CWV nominal`, vitals);
+            await sendAlert(
+              `${site.name} — IP/Geo Block Detected`,
+              analysis.analysis,
+              {
+                type: 'ip_block',
+                site,
+                extraDetails: [
+                  { label: 'Reachability', value: `${analysis.reachableCount}/${analysis.totalNodes} regions`, highlight: true },
+                  { label: 'Analysis', value: analysis.analysis, highlight: false },
+                  { label: 'Runner IP', value: regionResult.runnerIP || 'Unknown', highlight: false },
+                ],
+              }
+            );
+          } else {
+            console.log(`${LOG_PREFIX} ${site.name} Reachable from all regions.`);
+          }
+        } catch (err) {
+          console.error(`${LOG_PREFIX} ${site.name} Multi-region check failed:`, err.message);
         }
-      } catch (err) {
-        console.error(`${LOG_PREFIX} ${site.name} CWV check failed:`, err.message || err);
+      }
+    }
+
+    // --- Core Web Vitals ---
+    if (site.vitals_enabled !== false && availability.success) {
+      const lastVitals = currentState.lastVitals || { when: 0 };
+      const ageMin = (Date.now() - lastVitals.when) / 60000;
+
+      if (ageMin >= VITALS_INTERVAL_MINUTES) {
+        try {
+          const vitals = await fetchCoreWebVitals(site);
+          currentState.lastVitals = { when: Date.now(), vitals };
+          uptimeStore.recordVitals(data, site, vitals);
+
+          if (isVitalsBad(vitals)) {
+            console.warn(`${LOG_PREFIX} ${site.name} bad CWV`, vitals);
+            await sendAlert(
+              `${site.name} Core Web Vitals degraded`,
+              `${site.name} core web vitals cross threshold at ${now()}\nLCP=${vitals.LCP}ms, FCP=${vitals.FCP}ms, CLS=${vitals.CLS}, TBT=${vitals.TBT}, score=${vitals.performanceScore}`,
+              { type: 'vitals', site, vitals }
+            );
+          } else {
+            console.log(`${LOG_PREFIX} ${site.name} CWV nominal`, vitals);
+          }
+        } catch (err) {
+          console.error(`${LOG_PREFIX} ${site.name} CWV check failed:`, err.message || err);
+        }
+      }
+    }
+
+    // --- SLA risk check ---
+    const siteStore = data.sites?.[site.url];
+    if (siteStore) {
+      const slaTarget = site.sla_target || globalConfig.default_sla_target || 99.9;
+      const risk = checkSLARisk(siteStore, slaTarget);
+      if (risk.atRisk && !currentState.slaWarned) {
+        currentState.slaWarned = true;
+        await sendAlert(
+          `${site.name} — SLA at risk (${risk.currentSLA?.toFixed(2)}% vs ${slaTarget}% target)`,
+          risk.reason,
+          {
+            type: 'sla_risk',
+            site,
+            extraDetails: [
+              { label: 'Current SLA', value: `${risk.currentSLA?.toFixed(2)}%`, highlight: true },
+              { label: 'Target', value: `${slaTarget}%`, highlight: false },
+              { label: 'Failure Budget', value: `${risk.remainingBudget} checks remaining`, highlight: risk.remainingBudget <= 0 },
+              { label: 'Days Left', value: `${risk.daysRemaining} days`, highlight: false },
+            ],
+          }
+        );
+      } else if (!risk.atRisk) {
+        currentState.slaWarned = false;
+      }
+
+      // --- Analytics: trend warnings ---
+      const analytics = generateSiteAnalytics(siteStore);
+      if (analytics.latencyTrend.trend === 'degrading' && !currentState.trendWarned) {
+        currentState.trendWarned = true;
+        await sendAlert(
+          `${site.name} — Response time degrading`,
+          analytics.latencyTrend.message,
+          {
+            type: 'trend',
+            site,
+            extraDetails: [
+              { label: 'Trend', value: analytics.latencyTrend.message, highlight: true },
+              { label: 'Change', value: `+${analytics.latencyTrend.change?.toFixed(0)}%`, highlight: true },
+            ],
+          }
+        );
+      } else if (analytics.latencyTrend.trend !== 'degrading') {
+        currentState.trendWarned = false;
       }
     }
   }));
@@ -313,9 +460,27 @@ async function monitorCycle() {
   console.log(`${LOG_PREFIX} Check cycle completed at ${now()}`);
 }
 
+// -------------------------------------------------------------------------
+// CLI modes
+// -------------------------------------------------------------------------
 const runOnce = process.argv.includes('--once');
+const runReport = process.argv.includes('--report');
+const runDigest = process.argv.includes('--digest');
 
-if (runOnce) {
+if (runReport) {
+  console.log(`${LOG_PREFIX} Generating monthly SLA report...`);
+  const data = uptimeStore.loadData();
+  generateMonthlySLAReport(data)
+    .then(() => { console.log(`${LOG_PREFIX} Report sent.`); process.exit(0); })
+    .catch(err => { console.error(`${LOG_PREFIX} Report error:`, err); process.exit(1); });
+} else if (runDigest) {
+  console.log(`${LOG_PREFIX} Sending weekly digest...`);
+  const data = uptimeStore.loadData();
+  const reports = uptimeStore.getAllReports(data);
+  sendWeeklyDigest(reports)
+    .then(() => { console.log(`${LOG_PREFIX} Digest sent.`); process.exit(0); })
+    .catch(err => { console.error(`${LOG_PREFIX} Digest error:`, err); process.exit(1); });
+} else if (runOnce) {
   console.log(`${LOG_PREFIX} Running single check for ${sites.length} site(s)...`);
   monitorCycle()
     .then(() => { console.log(`${LOG_PREFIX} Done.`); process.exit(0); })

@@ -2,9 +2,23 @@ name: Site Monitor
 
 on:
   schedule:
-    # Runs every 5 minutes
+    # Main monitor: every 5 minutes
     - cron: "*/5 * * * *"
-  workflow_dispatch: # Allow manual trigger for testing
+    # Weekly digest: Monday 9:00 UTC
+    - cron: "0 9 * * 1"
+    # Monthly SLA report: 1st of month 9:00 UTC
+    - cron: "0 9 1 * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Run mode"
+        required: false
+        default: "check"
+        type: choice
+        options:
+          - check
+          - report
+          - digest
 
 permissions:
   contents: write
@@ -54,10 +68,23 @@ jobs:
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           SMTP_FROM: ${{ secrets.SMTP_FROM }}
           ALERT_TO: ${{ secrets.ALERT_TO }}
+          EU_PROXY_URL: ${{ secrets.EU_PROXY_URL }}
+          AP_PROXY_URL: ${{ secrets.AP_PROXY_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           INTERVAL_MINUTES: 5
           VITALS_MINUTES: 30
           TIMEOUT_MS: 20000
-        run: node web-monitor.js --once
+        run: |
+          MODE="${{ github.event.inputs.mode || 'check' }}"
+          if [ "$MODE" = "report" ]; then
+            node web-monitor.js --once
+            node web-monitor.js --report
+          elif [ "$MODE" = "digest" ]; then
+            node web-monitor.js --once
+            node web-monitor.js --digest
+          else
+            node web-monitor.js --once
+          fi
 
       - name: Backup generated files
         run: |
@@ -108,3 +135,77 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  # Weekly digest - runs every Monday at 9:00 UTC
+  weekly-digest:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '0 9 * * 1' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'digest')
+    needs: monitor
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Restore uptime data
+        run: |
+          git fetch origin data || true
+          if git show origin/data:data/uptime-data.json > /dev/null 2>&1; then
+            mkdir -p data
+            git show origin/data:data/uptime-data.json > data/uptime-data.json
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Send weekly digest
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_SECURE: ${{ secrets.SMTP_SECURE }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SMTP_FROM: ${{ secrets.SMTP_FROM }}
+          ALERT_TO: ${{ secrets.ALERT_TO }}
+        run: node web-monitor.js --digest
+
+  # Monthly SLA report - runs on the 1st of every month at 9:00 UTC
+  monthly-report:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '0 9 1 * *' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'report')
+    needs: monitor
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Restore uptime data
+        run: |
+          git fetch origin data || true
+          if git show origin/data:data/uptime-data.json > /dev/null 2>&1; then
+            mkdir -p data
+            git show origin/data:data/uptime-data.json > data/uptime-data.json
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Send monthly SLA report
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_SECURE: ${{ secrets.SMTP_SECURE }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SMTP_FROM: ${{ secrets.SMTP_FROM }}
+          ALERT_TO: ${{ secrets.ALERT_TO }}
+        run: node web-monitor.js --report

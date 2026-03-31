@@ -1,17 +1,21 @@
 {
   "name": "site-monitor",
   "version": "1.0.0",
-  "description": "Uptime + Core Web Vitals monitor with email alerts",
+  "description": "Organisation-wide site monitor with uptime tracking, multi-region IP block detection, SLA reporting, and status page",
   "main": "web-monitor.js",
   "scripts": {
     "start": "node web-monitor.js",
-    "dev": "node web-monitor.js"
+    "check": "node web-monitor.js --once",
+    "report": "node web-monitor.js --report",
+    "digest": "node web-monitor.js --digest",
+    "status-page": "node status-page.js"
   },
   "dependencies": {
     "dotenv": "^16.4.0",
+    "js-yaml": "^4.1.1",
     "node-cron": "^3.0.2",
-    "nodemailer": "^6.9.5",
-    "node-fetch": "^3.3.2"
+    "node-fetch": "^3.3.2",
+    "nodemailer": "^6.9.5"
   },
   "engines": {
     "node": ">=18"

@@ -29,7 +29,7 @@ function loadData() {
       console.warn('[uptime-store] Corrupt data file, starting fresh.');
     }
   }
-  return { sites: {}, lastUpdated: null };
+  return { sites: {}, regionChecks: {}, lastUpdated: null };
 }
 
 function saveData(data) {
@@ -192,11 +192,59 @@ function getAllReports(data) {
   return Object.keys(data.sites).map(url => getSiteReport(data, url));
 }
 
+/**
+ * Record multi-region check results for a site.
+ */
+function recordRegionCheck(data, site, regionResult) {
+  if (!data.regionChecks) data.regionChecks = {};
+  if (!data.regionChecks[site.url]) data.regionChecks[site.url] = [];
+
+  data.regionChecks[site.url].push({
+    timestamp: regionResult.timestamp,
+    runnerIP: regionResult.runnerIP,
+    direct: regionResult.direct,
+    globalCheck: {
+      checked: regionResult.globalCheck?.checked || false,
+      results: (regionResult.globalCheck?.results || []).map(r => ({
+        nodeId: r.nodeId,
+        location: r.location,
+        reachable: r.reachable,
+        statusCode: r.statusCode,
+      })),
+    },
+    ipBlockAnalysis: regionResult.ipBlockAnalysis,
+  });
+
+  // Keep last 500 region checks per site
+  if (data.regionChecks[site.url].length > 500) {
+    data.regionChecks[site.url] = data.regionChecks[site.url].slice(-500);
+  }
+}
+
+/**
+ * Get the latest region check for a site.
+ */
+function getLatestRegionCheck(data, siteUrl) {
+  const checks = data.regionChecks?.[siteUrl] || [];
+  return checks.length > 0 ? checks[checks.length - 1] : null;
+}
+
+/**
+ * Get region check history for a site.
+ */
+function getRegionCheckHistory(data, siteUrl, limit = 50) {
+  const checks = data.regionChecks?.[siteUrl] || [];
+  return checks.slice(-limit).reverse();
+}
+
 module.exports = {
   loadData,
   saveData,
   recordCheck,
   recordVitals,
+  recordRegionCheck,
+  getLatestRegionCheck,
+  getRegionCheckHistory,
   calculateUptime,
   getSiteReport,
   getAllReports,

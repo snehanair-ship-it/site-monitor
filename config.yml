@@ -1,0 +1,175 @@
+# =============================================================================
+# Site Monitor — Organisation-Wide Configuration
+# =============================================================================
+# Edit this file to add/remove sites, teams, and policies.
+# Changes take effect on the next monitor cycle (every 5 minutes).
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Global settings
+# ---------------------------------------------------------------------------
+global:
+  check_interval_minutes: 5
+  vitals_interval_minutes: 30
+  timeout_ms: 20000
+  repeat_alert_every: 3          # re-alert every N consecutive failures
+  default_sla_target: 99.9       # default SLA % if not set per-site
+  weekly_digest_day: monday      # day to send weekly digest (monday-sunday)
+  weekly_digest_hour: 9          # hour (24h format) to send weekly digest
+  monthly_report_day: 1          # day of month to send SLA report
+
+# ---------------------------------------------------------------------------
+# Teams — define teams with members and notification channels
+# ---------------------------------------------------------------------------
+teams:
+  platform:
+    name: "Platform Team"
+    members:
+      - name: "Sneha Nair"
+        email: "snehanair117@gmail.com"
+        role: "tech-lead"
+        escalation_level: 2
+      - name: "Pranali Sequeira"
+        email: "pranali.sequeira@kilowott.com"
+        role: "developer"
+        escalation_level: 1
+    slack_webhook: ""             # add Slack incoming webhook URL
+    escalation:
+      level_1_after_minutes: 0   # alert immediately
+      level_2_after_minutes: 10  # escalate to tech lead after 10 min
+      level_3_after_minutes: 30  # escalate to management after 30 min
+
+  frontend:
+    name: "Frontend Team"
+    members:
+      - name: "Gilroy Menezes"
+        email: "gilroy.menezes@kilowott.com"
+        role: "developer"
+        escalation_level: 1
+      - name: "Ajaj Rajguru"
+        email: "ajaj.rajguru@kilowott.com"
+        role: "developer"
+        escalation_level: 1
+    slack_webhook: ""
+    escalation:
+      level_1_after_minutes: 0
+      level_2_after_minutes: 15
+      level_3_after_minutes: 45
+
+  management:
+    name: "Management"
+    members:
+      - name: "Sneha Nair"
+        email: "snehanair117@gmail.com"
+        role: "manager"
+        escalation_level: 3
+    slack_webhook: ""
+    escalation:
+      level_1_after_minutes: 0
+      level_2_after_minutes: 10
+      level_3_after_minutes: 30
+
+# ---------------------------------------------------------------------------
+# Sites — define monitored sites with ownership, auth, and SLA targets
+# ---------------------------------------------------------------------------
+sites:
+  - name: "Equinavia"
+    url: "https://equinavia.com"
+    region: "us"
+    team: "platform"             # owning team (alerts go here)
+    sla_target: 99.9             # monthly uptime SLA %
+    check_endpoints:             # additional endpoints to check
+      - path: "/"
+        method: GET
+        expected_status: 200
+    auth: null                   # no auth needed (see examples below)
+    tags: ["production", "client"]
+    vitals_enabled: true
+
+  - name: "Preikestolen"
+    url: "https://preikestolenbasecamp.com"
+    region: "no"
+    team: "frontend"
+    sla_target: 99.5
+    check_endpoints:
+      - path: "/"
+        method: GET
+        expected_status: 200
+    auth: null
+    tags: ["production", "client"]
+    vitals_enabled: true
+
+# ---------------------------------------------------------------------------
+# Example: site with authentication
+# ---------------------------------------------------------------------------
+#  - name: "Internal Dashboard"
+#    url: "https://dashboard.internal.kilowott.com"
+#    region: "us"
+#    team: "platform"
+#    sla_target: 99.0
+#    check_endpoints:
+#      - path: "/api/health"
+#        method: GET
+#        expected_status: 200
+#      - path: "/api/v1/status"
+#        method: GET
+#        expected_status: 200
+#    auth:
+#      type: "bearer"            # options: bearer, basic, header
+#      # For bearer token:
+#      token_env: "DASHBOARD_TOKEN"   # reads from env/secrets
+#      # For basic auth:
+#      # username_env: "DASH_USER"
+#      # password_env: "DASH_PASS"
+#      # For custom header:
+#      # header_name: "X-API-Key"
+#      # header_value_env: "DASH_API_KEY"
+#    tags: ["internal", "critical"]
+#    vitals_enabled: false
+
+# ---------------------------------------------------------------------------
+# Multi-region monitoring
+# ---------------------------------------------------------------------------
+regions:
+  us-east:
+    name: "US East"
+    proxy: null                   # direct check from GitHub Actions runner
+    check_ip_url: "https://api.ipify.org?format=json"
+
+  eu-west:
+    name: "EU West"
+    proxy_env: "EU_PROXY_URL"     # optional HTTP proxy for EU checks
+    check_ip_url: "https://api.ipify.org?format=json"
+
+  ap-south:
+    name: "Asia Pacific"
+    proxy_env: "AP_PROXY_URL"     # optional HTTP proxy for AP checks
+    check_ip_url: "https://api.ipify.org?format=json"
+
+# ---------------------------------------------------------------------------
+# IP Block Detection
+# ---------------------------------------------------------------------------
+ip_block_detection:
+  enabled: true
+  # External services used to check site accessibility from multiple locations
+  check_services:
+    - name: "check-host-ping"
+      type: "check-host"
+      nodes:
+        - "us1"
+        - "de1"
+        - "sg1"
+        - "br1"
+        - "in1"
+        - "jp1"
+  # If a site is reachable from < threshold % of regions, flag as IP-blocked
+  block_threshold_percent: 50
+
+# ---------------------------------------------------------------------------
+# Thresholds for Core Web Vitals
+# ---------------------------------------------------------------------------
+thresholds:
+  LCP: 2500     # Largest Contentful Paint (ms)
+  FCP: 1800     # First Contentful Paint (ms)
+  CLS: 0.1      # Cumulative Layout Shift
+  TBT: 300      # Total Blocking Time (ms)
