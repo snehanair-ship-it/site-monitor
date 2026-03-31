@@ -1,0 +1,43 @@
+{
+  "sites": {
+    "https://equinavia.com": {
+      "name": "Equinavia",
+      "url": "https://equinavia.com",
+      "checks": [
+        {
+          "timestamp": "2026-03-31T07:30:54.911Z",
+          "success": true,
+          "status": 200,
+          "latency": 845,
+          "error": null
+        }
+      ],
+      "incidents": [],
+      "currentIncident": null,
+      "stats": {
+        "totalChecks": 1,
+        "successfulChecks": 1
+      }
+    },
+    "https://preikestolenbasecamp.com": {
+      "name": "Preikestolen",
+      "url": "https://preikestolenbasecamp.com",
+      "checks": [
+        {
+          "timestamp": "2026-03-31T07:30:55.178Z",
+          "success": true,
+          "status": 200,
+          "latency": 1066,
+          "error": null
+        }
+      ],
+      "incidents": [],
+      "currentIncident": null,
+      "stats": {
+        "totalChecks": 1,
+        "successfulChecks": 1
+      }
+    }
+  },
+  "lastUpdated": "2026-03-31T07:30:55.203Z"
+}
