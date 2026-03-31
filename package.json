@@ -8,7 +8,8 @@
     "check": "node web-monitor.js --once",
     "report": "node web-monitor.js --report",
     "digest": "node web-monitor.js --digest",
-    "status-page": "node status-page.js"
+    "status-page": "node status-page.js",
+    "dashboard": "cd dashboard && npm run dev"
   },
   "dependencies": {
     "dotenv": "^16.4.0",
