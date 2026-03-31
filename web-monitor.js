@@ -356,10 +356,12 @@ async function monitorCycle() {
           uptimeStore.recordRegionCheck(data, site, regionResult);
           currentState.lastRegionCheck = Date.now();
 
-          if (regionResult.ipBlockAnalysis.blocked || regionResult.ipBlockAnalysis.partialBlock) {
-            const analysis = regionResult.ipBlockAnalysis;
-            console.warn(`${LOG_PREFIX} ${site.name} IP BLOCK DETECTED:`, analysis.analysis);
+          const analysis = regionResult.ipBlockAnalysis;
+          const blockSeverity = analysis.severity || 'info';
 
+          if (blockSeverity === 'critical' || blockSeverity === 'warning') {
+            // Real issue: unexpected regions blocked — send alert
+            console.warn(`${LOG_PREFIX} ${site.name} IP BLOCK [${blockSeverity}]:`, analysis.analysis);
             await sendAlert(
               `${site.name} — IP/Geo Block Detected`,
               analysis.analysis,
@@ -368,11 +370,15 @@ async function monitorCycle() {
                 site,
                 extraDetails: [
                   { label: 'Reachability', value: `${analysis.reachableCount}/${analysis.totalNodes} regions`, highlight: true },
+                  { label: 'Unexpected Blocks', value: `${(analysis.unexpectedBlocks || []).length} region(s)`, highlight: true },
                   { label: 'Analysis', value: analysis.analysis, highlight: false },
                   { label: 'Runner IP', value: regionResult.runnerIP || 'Unknown', highlight: false },
                 ],
               }
             );
+          } else if (analysis.partialBlock) {
+            // Only expected blocks (Iran, China, etc.) — log only, no email
+            console.log(`${LOG_PREFIX} ${site.name} Blocked from ${(analysis.expectedBlocks || []).length} restricted region(s) (expected, no alert).`);
           } else {
             console.log(`${LOG_PREFIX} ${site.name} Reachable from all regions.`);
           }

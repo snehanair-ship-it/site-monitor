@@ -170,14 +170,25 @@ async function checkFromGlobalNodes(url) {
   }
 }
 
+// Countries where blocks are expected (firewalls, sanctions, etc.) — not alertable
+const EXPECTED_BLOCK_COUNTRIES = ['ir', 'cn', 'kp', 'ru', 'cu', 'sy', 'bg'];
+const EXPECTED_BLOCK_KEYWORDS = ['iran', 'china', 'north korea', 'russia', 'cuba', 'syria', 'bulgaria'];
+
+function isExpectedBlock(location) {
+  const lower = (location || '').toLowerCase();
+  return EXPECTED_BLOCK_COUNTRIES.some(c => lower.startsWith(c + ',') || lower.startsWith(c + ' ')) ||
+    EXPECTED_BLOCK_KEYWORDS.some(kw => lower.includes(kw));
+}
+
 /**
  * Analyze multi-region results to detect IP blocks.
- * Returns analysis with block status and affected regions.
+ * Separates expected blocks (Iran, China, etc.) from real issues.
+ * Only flags as critical/blocked if non-expected regions are affected.
  */
 function analyzeIPBlocks(globalResults) {
   const ipBlockConfig = getIPBlockConfig();
   if (!globalResults.checked || globalResults.results.length === 0) {
-    return { blocked: false, analysis: 'No multi-region data available.' };
+    return { blocked: false, analysis: 'No multi-region data available.', severity: 'info' };
   }
 
   const total = globalResults.results.length;
@@ -185,17 +196,24 @@ function analyzeIPBlocks(globalResults) {
   const unreachable = globalResults.results.filter(r => !r.reachable);
   const reachablePercent = (reachable / total) * 100;
 
+  // Separate expected vs unexpected blocks
+  const expectedBlocks = unreachable.filter(r => isExpectedBlock(r.location));
+  const unexpectedBlocks = unreachable.filter(r => !isExpectedBlock(r.location));
+
   const threshold = ipBlockConfig.block_threshold_percent || 50;
 
   if (reachable === total) {
     return {
       blocked: false,
       partialBlock: false,
+      severity: 'info',
       analysis: `Site reachable from all ${total} regions.`,
       reachablePercent: 100,
       reachableCount: reachable,
       totalNodes: total,
       unreachableRegions: [],
+      expectedBlocks: [],
+      unexpectedBlocks: [],
     };
   }
 
@@ -203,25 +221,62 @@ function analyzeIPBlocks(globalResults) {
     return {
       blocked: true,
       partialBlock: false,
+      severity: 'critical',
       analysis: `Site unreachable from all ${total} regions — likely down globally.`,
       reachablePercent: 0,
       reachableCount: 0,
       totalNodes: total,
       unreachableRegions: unreachable.map(r => r.location),
+      expectedBlocks: expectedBlocks.map(r => r.location),
+      unexpectedBlocks: unexpectedBlocks.map(r => r.location),
     };
   }
 
-  const isBlocked = reachablePercent < threshold;
+  // Determine severity based on UNEXPECTED blocks only
+  let severity = 'info';
+  let blocked = false;
+  if (unexpectedBlocks.length > 0) {
+    const unexpectedPercent = (unexpectedBlocks.length / total) * 100;
+    if (unexpectedPercent > 20) {
+      severity = 'critical';
+      blocked = true;
+    } else if (unexpectedBlocks.length >= 3) {
+      severity = 'warning';
+      blocked = true;
+    } else {
+      severity = 'warning';
+    }
+  }
+  // If only expected blocks, it's just informational
+  if (unexpectedBlocks.length === 0 && expectedBlocks.length > 0) {
+    severity = 'info';
+    blocked = false;
+  }
+
+  const parts = [];
+  parts.push(`Site reachable from ${reachable}/${total} regions (${reachablePercent.toFixed(0)}%).`);
+  if (unexpectedBlocks.length > 0) {
+    parts.push(`Blocked from ${unexpectedBlocks.length} unexpected region(s): ${unexpectedBlocks.map(r => r.location).join(', ')}.`);
+  }
+  if (expectedBlocks.length > 0) {
+    parts.push(`Also blocked from ${expectedBlocks.length} restricted region(s) (expected): ${expectedBlocks.map(r => r.location).join(', ')}.`);
+  }
+
   return {
-    blocked: isBlocked,
-    partialBlock: true,
-    analysis: `Site reachable from ${reachable}/${total} regions (${reachablePercent.toFixed(0)}%). ` +
-      `Unreachable from: ${unreachable.map(r => r.location).join(', ')}. ` +
-      (isBlocked ? 'Possible IP/geo-block detected.' : 'Minor regional accessibility issues.'),
+    blocked,
+    partialBlock: unreachable.length > 0,
+    severity,
+    analysis: parts.join(' '),
     reachablePercent,
     reachableCount: reachable,
     totalNodes: total,
     unreachableRegions: unreachable.map(r => ({
+      location: r.location,
+      error: r.error,
+      statusCode: r.statusCode,
+    })),
+    expectedBlocks: expectedBlocks.map(r => r.location),
+    unexpectedBlocks: unexpectedBlocks.map(r => ({
       location: r.location,
       error: r.error,
       statusCode: r.statusCode,
