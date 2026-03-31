@@ -132,17 +132,24 @@
           "status": 200,
           "latency": 120,
           "error": null
+        },
+        {
+          "timestamp": "2026-03-31T20:06:43.481Z",
+          "success": true,
+          "status": 200,
+          "latency": 354,
+          "error": null
         }
       ],
       "incidents": [],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 3,
-        "successfulChecks": 3
+        "totalChecks": 4,
+        "successfulChecks": 4
       }
     }
   },
-  "lastUpdated": "2026-03-31T18:07:12.552Z",
+  "lastUpdated": "2026-03-31T20:06:55.880Z",
   "regionChecks": {
     "https://preikestolenbasecamp.com": [
       {
@@ -2677,53 +2684,406 @@
           ],
           "unexpectedBlocks": []
         }
+      },
+      {
+        "timestamp": "2026-03-31T20:06:52.147Z",
+        "runnerIP": "172.214.47.54",
+        "direct": {
+          "reachable": true,
+          "status": 200,
+          "latency": 259,
+          "error": null
+        },
+        "globalCheck": {
+          "checked": true,
+          "results": [
+            {
+              "nodeId": "ae1.node.check-host.net",
+              "location": "ae, UAE, Dubai, 176.125.231.26, AS9009",
+              "reachable": true,
+              "statusCode": 1.03189706802368
+            },
+            {
+              "nodeId": "at1.node.check-host.net",
+              "location": "at, Austria, Vienna, 185.224.3.111, AS64457",
+              "reachable": true,
+              "statusCode": 0.539608955383301
+            },
+            {
+              "nodeId": "bg1.node.check-host.net",
+              "location": "bg, Bulgaria, Sofia, 93.123.16.89, AS9028",
+              "reachable": true,
+              "statusCode": 1.30076909065247
+            },
+            {
+              "nodeId": "br1.node.check-host.net",
+              "location": "br, Brazil, Sao Paulo, 45.162.230.209, AS268581",
+              "reachable": true,
+              "statusCode": 1.35133790969849
+            },
+            {
+              "nodeId": "br2.node.check-host.net",
+              "location": "br, Brazil, Sao Paulo, 143.14.79.33, AS206971",
+              "reachable": true,
+              "statusCode": 0.245725870132446
+            },
+            {
+              "nodeId": "ca1.node.check-host.net",
+              "location": "ca, Canada, Vancouver, 198.135.169.20, AS396993",
+              "reachable": true,
+              "statusCode": 0.353928804397583
+            },
+            {
+              "nodeId": "ch1.node.check-host.net",
+              "location": "ch, Switzerland, Zurich, 179.43.148.195, AS51852",
+              "reachable": true,
+              "statusCode": 0.522824048995972
+            },
+            {
+              "nodeId": "cn1.node.check-host.net",
+              "location": "cn, China, Zhejiang, 110.42.102.106, AS136188",
+              "reachable": true,
+              "statusCode": 1.27725481987
+            },
+            {
+              "nodeId": "cy1.node.check-host.net",
+              "location": "cy, Cyprus, Larnaca, 91.199.41.71, AS6866",
+              "reachable": true,
+              "statusCode": 0.681843996047974
+            },
+            {
+              "nodeId": "cz1.node.check-host.net",
+              "location": "cz, Czechia, C.Budejovice, 77.75.230.51, AS209847",
+              "reachable": true,
+              "statusCode": 0.531277179718018
+            },
+            {
+              "nodeId": "de1.node.check-host.net",
+              "location": "de, Germany, Nuremberg, 116.203.22.31, AS24940",
+              "reachable": true,
+              "statusCode": 0.547648191452026
+            },
+            {
+              "nodeId": "de4.node.check-host.net",
+              "location": "de, Germany, Frankfurt, 185.37.147.117, AS34549",
+              "reachable": true,
+              "statusCode": 0.501080989837646
+            },
+            {
+              "nodeId": "es1.node.check-host.net",
+              "location": "es, Spain, Madrid, 78.40.111.151, AS215691",
+              "reachable": true,
+              "statusCode": 0.559474945068359
+            },
+            {
+              "nodeId": "es2.node.check-host.net",
+              "location": "es, Spain, Barcelona, 194.26.100.165, AS26141",
+              "reachable": true,
+              "statusCode": 0.548398017883301
+            },
+            {
+              "nodeId": "fi1.node.check-host.net",
+              "location": "fi, Finland, Helsinki, 65.109.182.130, AS24940",
+              "reachable": true,
+              "statusCode": 0.573460102081299
+            },
+            {
+              "nodeId": "fr1.node.check-host.net",
+              "location": "fr, France, Roubaix, 185.19.33.131, AS49556",
+              "reachable": true,
+              "statusCode": 0.505116939544678
+            },
+            {
+              "nodeId": "fr2.node.check-host.net",
+              "location": "fr, France, Paris, 195.154.114.92, AS12876",
+              "reachable": true,
+              "statusCode": 0.510576009750366
+            },
+            {
+              "nodeId": "hk1.node.check-host.net",
+              "location": "hk, Hong Kong, Hong Kong, 141.98.234.68, AS207713",
+              "reachable": true,
+              "statusCode": 0.704689025878906
+            },
+            {
+              "nodeId": "hu1.node.check-host.net",
+              "location": "hu, Hungary, Nyiregyhaza, 45.9.168.235, AS211619",
+              "reachable": true,
+              "statusCode": 0.570245027542114
+            },
+            {
+              "nodeId": "id2.node.check-host.net",
+              "location": "id, Indonesia, Jakarta, 103.42.116.205, AS141968",
+              "reachable": true,
+              "statusCode": 0.612112045288086
+            },
+            {
+              "nodeId": "il2.node.check-host.net",
+              "location": "il, Israel, Netanya, 195.211.24.48, AS206446",
+              "reachable": true,
+              "statusCode": 0.562103033065796
+            },
+            {
+              "nodeId": "in2.node.check-host.net",
+              "location": "in, India, Delhi, 181.214.10.239, AS140641",
+              "reachable": true,
+              "statusCode": 1.14007687568665
+            },
+            {
+              "nodeId": "in3.node.check-host.net",
+              "location": "in, India, Hyderabad, 151.243.98.61, AS149573",
+              "reachable": true,
+              "statusCode": 0.851013898849487
+            },
+            {
+              "nodeId": "in4.node.check-host.net",
+              "location": "in, India, Bengaluru, 103.183.157.60, AS149573",
+              "reachable": true,
+              "statusCode": 0.942428827285767
+            },
+            {
+              "nodeId": "in5.node.check-host.net",
+              "location": "in, India, Kolkata, 151.243.12.65, AS149573",
+              "reachable": true,
+              "statusCode": 0.81624698638916
+            },
+            {
+              "nodeId": "ir1.node.check-host.net",
+              "location": "ir, Iran, Tehran, 185.105.238.209, AS47430",
+              "reachable": false,
+              "statusCode": null
+            },
+            {
+              "nodeId": "ir5.node.check-host.net",
+              "location": "ir, Iran, Isfahan, 185.79.159.20, AS58224",
+              "reachable": false,
+              "statusCode": null
+            },
+            {
+              "nodeId": "ir6.node.check-host.net",
+              "location": "ir, Iran, Karaj, 109.122.245.39, AS208264",
+              "reachable": false,
+              "statusCode": null
+            },
+            {
+              "nodeId": "it2.node.check-host.net",
+              "location": "it, Italy, Milan, 185.25.204.60, AS60798",
+              "reachable": true,
+              "statusCode": 0.561310052871704
+            },
+            {
+              "nodeId": "jp1.node.check-host.net",
+              "location": "jp, Japan, Tokyo, 103.214.169.52, AS149042",
+              "reachable": true,
+              "statusCode": 0.655411958694458
+            },
+            {
+              "nodeId": "kz1.node.check-host.net",
+              "location": "kz, Kazakhstan, Karaganda, 185.120.77.165, AS203087",
+              "reachable": true,
+              "statusCode": 0.993367910385132
+            },
+            {
+              "nodeId": "lt1.node.check-host.net",
+              "location": "lt, Lithuania, Vilnius, 88.119.179.10, AS198651",
+              "reachable": true,
+              "statusCode": 0.602591037750244
+            },
+            {
+              "nodeId": "md1.node.check-host.net",
+              "location": "md, Moldova, Chisinau, 178.17.171.235, AS43289",
+              "reachable": true,
+              "statusCode": 0.930094003677368
+            },
+            {
+              "nodeId": "nl1.node.check-host.net",
+              "location": "nl, Netherlands, Amsterdam, 185.209.161.145, AS14576",
+              "reachable": true,
+              "statusCode": 0.477770805358887
+            },
+            {
+              "nodeId": "nl2.node.check-host.net",
+              "location": "nl, Netherlands, Meppel, 195.211.27.85, AS206446",
+              "reachable": true,
+              "statusCode": 0.481374025344849
+            },
+            {
+              "nodeId": "pl1.node.check-host.net",
+              "location": "pl, Poland, Poznan, 178.216.200.169, AS31229",
+              "reachable": true,
+              "statusCode": 0.544297933578491
+            },
+            {
+              "nodeId": "pl2.node.check-host.net",
+              "location": "pl, Poland, Warsaw, 195.137.244.1, AS214379",
+              "reachable": true,
+              "statusCode": 0.546122074127197
+            },
+            {
+              "nodeId": "pt1.node.check-host.net",
+              "location": "pt, Portugal, Viana, 185.83.213.25, AS44222",
+              "reachable": true,
+              "statusCode": 0.639414072036743
+            },
+            {
+              "nodeId": "ro1.node.check-host.net",
+              "location": "ro, Romania, Bucharest, 107.149.201.15, AS211281",
+              "reachable": true,
+              "statusCode": 0.584240198135376
+            },
+            {
+              "nodeId": "rs1.node.check-host.net",
+              "location": "rs, Serbia, Belgrade, 194.146.57.64, AS35779",
+              "reachable": true,
+              "statusCode": 0.559439897537231
+            },
+            {
+              "nodeId": "ru1.node.check-host.net",
+              "location": "ru, Russia, Moscow, 185.130.104.238, AS14576",
+              "reachable": true,
+              "statusCode": 0.598062038421631
+            },
+            {
+              "nodeId": "ru2.node.check-host.net",
+              "location": "ru, Russia, Moscow, 194.26.229.20, AS210644",
+              "reachable": true,
+              "statusCode": 0.673861026763916
+            },
+            {
+              "nodeId": "ru3.node.check-host.net",
+              "location": "ru, Russia, Saint Petersburg, 185.221.199.82, AS210644",
+              "reachable": true,
+              "statusCode": 0.631453990936279
+            },
+            {
+              "nodeId": "se1.node.check-host.net",
+              "location": "se, Sweden, Stockholm, 78.40.116.61, AS200019",
+              "reachable": true,
+              "statusCode": 0.488410949707031
+            },
+            {
+              "nodeId": "se2.node.check-host.net",
+              "location": "se, Sweden, Stockholm, 195.137.245.1, AS214379",
+              "reachable": true,
+              "statusCode": 0.523561954498291
+            },
+            {
+              "nodeId": "sg1.node.check-host.net",
+              "location": "sg, Singapore, Singapore, 217.15.166.168, AS141995",
+              "reachable": true,
+              "statusCode": 0.710077047348022
+            },
+            {
+              "nodeId": "si1.node.check-host.net",
+              "location": "si, Slovenia, Maribor, 83.143.119.103, AS49592",
+              "reachable": true,
+              "statusCode": 0.578397035598755
+            },
+            {
+              "nodeId": "tr1.node.check-host.net",
+              "location": "tr, Turkey, Istanbul, 185.23.17.21, AS211557",
+              "reachable": true,
+              "statusCode": 0.733656883239746
+            },
+            {
+              "nodeId": "tr2.node.check-host.net",
+              "location": "tr, Turkey, Istanbul, 77.92.151.181, AS44620",
+              "reachable": true,
+              "statusCode": 0.636026859283447
+            },
+            {
+              "nodeId": "ua1.node.check-host.net",
+              "location": "ua, Ukraine, Khmelnytskyi, 185.86.77.126, AS201094",
+              "reachable": true,
+              "statusCode": 0.660184860229492
+            },
+            {
+              "nodeId": "ua2.node.check-host.net",
+              "location": "ua, Ukraine, Kyiv, 91.231.182.39, AS214379",
+              "reachable": true,
+              "statusCode": 0.61044716835022
+            },
+            {
+              "nodeId": "ua3.node.check-host.net",
+              "location": "ua, Ukraine, Kyiv, 104.28.192.94, AS13335",
+              "reachable": true,
+              "statusCode": 0.751654863357544
+            },
+            {
+              "nodeId": "uk1.node.check-host.net",
+              "location": "gb, UK, Coventry, 45.159.248.77, AS209847",
+              "reachable": true,
+              "statusCode": 0.503494024276733
+            },
+            {
+              "nodeId": "us1.node.check-host.net",
+              "location": "us, USA, Los Angeles, 38.145.202.12, AS18978",
+              "reachable": true,
+              "statusCode": 0.0801999568939209
+            },
+            {
+              "nodeId": "us2.node.check-host.net",
+              "location": "us, USA, Dallas, 64.72.205.76, AS215703",
+              "reachable": true,
+              "statusCode": 0.350000858306885
+            },
+            {
+              "nodeId": "us3.node.check-host.net",
+              "location": "us, USA, Atlanta, 147.45.60.14, AS215540",
+              "reachable": true,
+              "statusCode": 0.256453037261963
+            },
+            {
+              "nodeId": "us4.node.check-host.net",
+              "location": "us, USA, Miami, 157.254.174.204, AS26141",
+              "reachable": true,
+              "statusCode": 0.984411001205444
+            },
+            {
+              "nodeId": "vn1.node.check-host.net",
+              "location": "vn, Vietnam, Ho Chi Minh City, 45.252.248.142, AS63760",
+              "reachable": true,
+              "statusCode": 0.944563865661621
+            }
+          ]
+        },
+        "ipBlockAnalysis": {
+          "blocked": false,
+          "partialBlock": true,
+          "severity": "info",
+          "analysis": "Site reachable from 55/58 regions (95%). Also blocked from 3 restricted region(s) (expected): ir, Iran, Tehran, 185.105.238.209, AS47430, ir, Iran, Isfahan, 185.79.159.20, AS58224, ir, Iran, Karaj, 109.122.245.39, AS208264.",
+          "reachablePercent": 94.82758620689656,
+          "reachableCount": 55,
+          "totalNodes": 58,
+          "unreachableRegions": [
+            {
+              "location": "ir, Iran, Tehran, 185.105.238.209, AS47430",
+              "error": null,
+              "statusCode": null
+            },
+            {
+              "location": "ir, Iran, Isfahan, 185.79.159.20, AS58224",
+              "error": null,
+              "statusCode": null
+            },
+            {
+              "location": "ir, Iran, Karaj, 109.122.245.39, AS208264",
+              "error": null,
+              "statusCode": null
+            }
+          ],
+          "expectedBlocks": [
+            "ir, Iran, Tehran, 185.105.238.209, AS47430",
+            "ir, Iran, Isfahan, 185.79.159.20, AS58224",
+            "ir, Iran, Karaj, 109.122.245.39, AS208264"
+          ],
+          "unexpectedBlocks": []
+        }
       }
     ]
   },
   "_aiops": {
     "sites": {
-      "https://equinavia.com": {
-        "siteName": "Equinavia",
-        "siteUrl": "https://equinavia.com",
-        "predictions": {
-          "latency": {
-            "prediction": null,
-            "reason": "Insufficient data (need 20+ checks)."
-          },
-          "sla": {
-            "prediction": null,
-            "reason": "Insufficient data for this month."
-          },
-          "alerts": []
-        },
-        "anomalies": {
-          "anomalies": [],
-          "context": "Insufficient data for anomaly detection."
-        },
-        "historicalMatch": null,
-        "hasCriticalAlerts": false
-      },
-      "https://preikestolenbasecamp.com": {
-        "siteName": "Preikestolen",
-        "siteUrl": "https://preikestolenbasecamp.com",
-        "predictions": {
-          "latency": {
-            "prediction": null,
-            "reason": "Insufficient data (need 20+ checks)."
-          },
-          "sla": {
-            "prediction": null,
-            "reason": "Insufficient data for this month."
-          },
-          "alerts": []
-        },
-        "anomalies": {
-          "anomalies": [],
-          "context": "Insufficient data for anomaly detection."
-        },
-        "historicalMatch": null,
-        "hasCriticalAlerts": false
-      },
       "https://kodework.com": {
         "siteName": "kodework",
         "siteUrl": "https://kodework.com",
@@ -2785,7 +3145,7 @@
         }
       ],
       "causalChain": null,
-      "timestamp": "2026-03-31T18:06:39.032Z"
+      "timestamp": "2026-03-31T20:06:52.876Z"
     },
     "criticalAlerts": [
       {
@@ -2795,212 +3155,21 @@
       }
     ],
     "summary": {
-      "totalSites": 3,
+      "totalSites": 1,
       "sitesWithAlerts": 0,
       "totalAlerts": 1,
       "overallHealth": "critical"
     },
-    "timestamp": "2026-03-31T18:06:39.032Z"
+    "timestamp": "2026-03-31T20:06:52.876Z"
   },
   "_security": {
     "sites": {
-      "https://equinavia.com": {
-        "site": "Equinavia",
-        "url": "https://equinavia.com",
-        "riskLevel": "low",
-        "scanDuration": 9450,
-        "timestamp": "2026-03-31T18:06:50.427Z",
-        "vulnerabilities": [],
-        "exposedEndpoints": [],
-        "headers": {
-          "score": 86,
-          "missing": [
-            {
-              "header": "x-xss-protection",
-              "name": "X-XSS-Protection",
-              "severity": "low",
-              "recommendation": "Add header: X-XSS-Protection: 1; mode=block (legacy but still useful)."
-            }
-          ],
-          "present": [
-            {
-              "header": "strict-transport-security",
-              "name": "HSTS (HTTP Strict Transport Security)",
-              "severity": "high",
-              "recommendation": "Add header: Strict-Transport-Security: max-age=31536000; includeSubDomains; preload",
-              "value": "max-age=31536000; includeSubDomains"
-            },
-            {
-              "header": "x-frame-options",
-              "name": "X-Frame-Options (Clickjacking Protection)",
-              "severity": "high",
-              "recommendation": "Add header: X-Frame-Options: DENY or SAMEORIGIN",
-              "value": "SAMEORIGIN"
-            },
-            {
-              "header": "x-content-type-options",
-              "name": "X-Content-Type-Options (MIME Sniffing)",
-              "severity": "medium",
-              "recommendation": "Add header: X-Content-Type-Options: nosniff",
-              "value": "nosniff"
-            },
-            {
-              "header": "content-security-policy",
-              "name": "Content Security Policy (CSP)",
-              "severity": "high",
-              "recommendation": "Implement a Content-Security-Policy header to prevent XSS and data injection.",
-              "value": "frame-ancestors 'self';"
-            },
-            {
-              "header": "referrer-policy",
-              "name": "Referrer Policy",
-              "severity": "medium",
-              "recommendation": "Add header: Referrer-Policy: strict-origin-when-cross-origin",
-              "value": "strict-origin-when-cross-origin"
-            },
-            {
-              "header": "permissions-policy",
-              "name": "Permissions Policy (Feature Policy)",
-              "severity": "medium",
-              "recommendation": "Add Permissions-Policy header to control browser feature access (camera, mic, geolocation).",
-              "value": "camera=(), microphone=(), geolocation=()"
-            }
-          ],
-          "disclosures": []
-        },
-        "summary": {
-          "endpointsChecked": 27,
-          "vulnerabilities": 0,
-          "exposed": 0,
-          "headersPresent": 6,
-          "headersMissing": 1,
-          "infoDisclosures": 0,
-          "critical": 0,
-          "high": 0,
-          "medium": 0
-        }
-      },
-      "https://preikestolenbasecamp.com": {
-        "site": "Preikestolen",
-        "url": "https://preikestolenbasecamp.com",
-        "riskLevel": "critical",
-        "scanDuration": 19861,
-        "timestamp": "2026-03-31T18:07:10.288Z",
-        "vulnerabilities": [
-          {
-            "path": "/xmlrpc.php",
-            "method": "POST",
-            "name": "XML-RPC (POST)",
-            "status": 200,
-            "vulnerable": true,
-            "severity": "critical",
-            "finding": "XML-RPC (POST) is accessible (HTTP 200). Expected: 403/405/404/301.",
-            "recommendation": "Block at Cloudflare WAF (/xmlrpc.php → Block) AND at Nginx (deny all; return 403).",
-            "checked": true
-          },
-          {
-            "path": "/wp-config.php",
-            "method": "GET",
-            "name": "WP Config File",
-            "status": 200,
-            "vulnerable": true,
-            "severity": "critical",
-            "finding": "WP Config File is accessible (HTTP 200). Expected: 403/404/500.",
-            "recommendation": "Must never be publicly accessible. Check web server config.",
-            "checked": true
-          },
-          {
-            "path": "/readme.html",
-            "method": "GET",
-            "name": "WP Readme (version disclosure)",
-            "status": 200,
-            "vulnerable": true,
-            "severity": "low",
-            "finding": "WP Readme (version disclosure) is accessible (HTTP 200). Expected: 403/404.",
-            "recommendation": "Delete readme.html to prevent WordPress version disclosure.",
-            "checked": true
-          }
-        ],
-        "exposedEndpoints": [
-          {
-            "path": "/wp-login.php",
-            "method": "GET",
-            "name": "WP Login Page",
-            "status": 200,
-            "vulnerable": false,
-            "severity": "info",
-            "finding": "WP Login Page is publicly accessible (HTTP 200).",
-            "recommendation": "Consider hiding or restricting wp-login.php with IP allowlisting or 2FA.",
-            "checked": true
-          }
-        ],
-        "headers": {
-          "score": 0,
-          "missing": [
-            {
-              "header": "strict-transport-security",
-              "name": "HSTS (HTTP Strict Transport Security)",
-              "severity": "high",
-              "recommendation": "Add header: Strict-Transport-Security: max-age=31536000; includeSubDomains; preload"
-            },
-            {
-              "header": "x-frame-options",
-              "name": "X-Frame-Options (Clickjacking Protection)",
-              "severity": "high",
-              "recommendation": "Add header: X-Frame-Options: DENY or SAMEORIGIN"
-            },
-            {
-              "header": "x-content-type-options",
-              "name": "X-Content-Type-Options (MIME Sniffing)",
-              "severity": "medium",
-              "recommendation": "Add header: X-Content-Type-Options: nosniff"
-            },
-            {
-              "header": "content-security-policy",
-              "name": "Content Security Policy (CSP)",
-              "severity": "high",
-              "recommendation": "Implement a Content-Security-Policy header to prevent XSS and data injection."
-            },
-            {
-              "header": "x-xss-protection",
-              "name": "X-XSS-Protection",
-              "severity": "low",
-              "recommendation": "Add header: X-XSS-Protection: 1; mode=block (legacy but still useful)."
-            },
-            {
-              "header": "referrer-policy",
-              "name": "Referrer Policy",
-              "severity": "medium",
-              "recommendation": "Add header: Referrer-Policy: strict-origin-when-cross-origin"
-            },
-            {
-              "header": "permissions-policy",
-              "name": "Permissions Policy (Feature Policy)",
-              "severity": "medium",
-              "recommendation": "Add Permissions-Policy header to control browser feature access (camera, mic, geolocation)."
-            }
-          ],
-          "present": [],
-          "disclosures": []
-        },
-        "summary": {
-          "endpointsChecked": 27,
-          "vulnerabilities": 3,
-          "exposed": 1,
-          "headersPresent": 0,
-          "headersMissing": 7,
-          "infoDisclosures": 0,
-          "critical": 2,
-          "high": 0,
-          "medium": 0
-        }
-      },
       "https://kodework.com": {
         "site": "kodework",
         "url": "https://kodework.com",
         "riskLevel": "medium",
-        "scanDuration": 684,
-        "timestamp": "2026-03-31T18:07:10.973Z",
+        "scanDuration": 3002,
+        "timestamp": "2026-03-31T20:06:55.880Z",
         "vulnerabilities": [],
         "exposedEndpoints": [],
         "headers": {
@@ -3066,11 +3235,11 @@
       }
     },
     "overall": {
-      "totalSites": 3,
-      "totalVulnerabilities": 3,
-      "worstRiskLevel": "critical",
-      "avgHeaderScore": 29
+      "totalSites": 1,
+      "totalVulnerabilities": 0,
+      "worstRiskLevel": "medium",
+      "avgHeaderScore": 0
     },
-    "timestamp": "2026-03-31T18:07:10.973Z"
+    "timestamp": "2026-03-31T20:06:55.880Z"
   }
 }
