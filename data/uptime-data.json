@@ -24,13 +24,20 @@
           "status": 200,
           "latency": 800,
           "error": null
+        },
+        {
+          "timestamp": "2026-03-31T10:40:17.699Z",
+          "success": true,
+          "status": 200,
+          "latency": 704,
+          "error": null
         }
       ],
       "incidents": [],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 3,
-        "successfulChecks": 3
+        "totalChecks": 4,
+        "successfulChecks": 4
       }
     },
     "https://preikestolenbasecamp.com": {
@@ -57,17 +64,43 @@
           "status": 200,
           "latency": 1220,
           "error": null
+        },
+        {
+          "timestamp": "2026-03-31T10:40:18.301Z",
+          "success": true,
+          "status": 200,
+          "latency": 1255,
+          "error": null
         }
       ],
       "incidents": [],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 3,
-        "successfulChecks": 3
+        "totalChecks": 4,
+        "successfulChecks": 4
+      }
+    },
+    "https://kodework.com": {
+      "name": "kodework",
+      "url": "https://kodework.com",
+      "checks": [
+        {
+          "timestamp": "2026-03-31T10:40:17.337Z",
+          "success": true,
+          "status": 200,
+          "latency": 288,
+          "error": null
+        }
+      ],
+      "incidents": [],
+      "currentIncident": null,
+      "stats": {
+        "totalChecks": 1,
+        "successfulChecks": 1
       }
     }
   },
-  "lastUpdated": "2026-03-31T10:37:30.216Z",
+  "lastUpdated": "2026-03-31T10:40:33.371Z",
   "regionChecks": {
     "https://preikestolenbasecamp.com": [
       {
@@ -104,6 +137,394 @@
         "ipBlockAnalysis": {
           "blocked": false,
           "analysis": "No multi-region data available."
+        }
+      },
+      {
+        "timestamp": "2026-03-31T10:40:27.546Z",
+        "runnerIP": "135.232.227.148",
+        "direct": {
+          "reachable": true,
+          "status": 200,
+          "latency": 919,
+          "error": null
+        },
+        "globalCheck": {
+          "checked": true,
+          "results": [
+            {
+              "nodeId": "ae1.node.check-host.net",
+              "location": "ae, UAE, Dubai, 176.125.231.26, AS9009",
+              "reachable": true,
+              "statusCode": 1.16479206085205
+            },
+            {
+              "nodeId": "at1.node.check-host.net",
+              "location": "at, Austria, Vienna, 185.224.3.111, AS64457",
+              "reachable": true,
+              "statusCode": 1.8848249912262
+            },
+            {
+              "nodeId": "bg1.node.check-host.net",
+              "location": "bg, Bulgaria, Sofia, 93.123.16.89, AS9028",
+              "reachable": true,
+              "statusCode": 3.6088969707489
+            },
+            {
+              "nodeId": "br1.node.check-host.net",
+              "location": "br, Brazil, Sao Paulo, 45.162.230.209, AS268581",
+              "reachable": true,
+              "statusCode": 0.987913846969604
+            },
+            {
+              "nodeId": "br2.node.check-host.net",
+              "location": "br, Brazil, Sao Paulo, 143.14.79.33, AS206971",
+              "reachable": true,
+              "statusCode": 1.52762794494629
+            },
+            {
+              "nodeId": "ca1.node.check-host.net",
+              "location": "ca, Canada, Vancouver, 198.135.169.20, AS396993",
+              "reachable": true,
+              "statusCode": 0.873147964477539
+            },
+            {
+              "nodeId": "ch1.node.check-host.net",
+              "location": "ch, Switzerland, Zurich, 179.43.148.195, AS51852",
+              "reachable": true,
+              "statusCode": 2.41159200668335
+            },
+            {
+              "nodeId": "cn1.node.check-host.net",
+              "location": "cn, China, Zhejiang, 110.42.102.106, AS136188",
+              "reachable": true,
+              "statusCode": 2.13703107833862
+            },
+            {
+              "nodeId": "cy1.node.check-host.net",
+              "location": "cy, Cyprus, Larnaca, 91.199.41.71, AS6866",
+              "reachable": true,
+              "statusCode": 0.835527896881104
+            },
+            {
+              "nodeId": "cz1.node.check-host.net",
+              "location": "cz, Czechia, C.Budejovice, 77.75.230.51, AS209847",
+              "reachable": true,
+              "statusCode": 0.669681072235107
+            },
+            {
+              "nodeId": "de1.node.check-host.net",
+              "location": "de, Germany, Nuremberg, 116.203.22.31, AS24940",
+              "reachable": true,
+              "statusCode": 1.28532290458679
+            },
+            {
+              "nodeId": "de4.node.check-host.net",
+              "location": "de, Germany, Frankfurt, 185.37.147.117, AS34549",
+              "reachable": true,
+              "statusCode": 0.662867069244385
+            },
+            {
+              "nodeId": "es1.node.check-host.net",
+              "location": "es, Spain, Madrid, 78.40.111.151, AS215691",
+              "reachable": true,
+              "statusCode": 0.785652160644531
+            },
+            {
+              "nodeId": "es2.node.check-host.net",
+              "location": "es, Spain, Barcelona, 194.26.100.165, AS26141",
+              "reachable": true,
+              "statusCode": 0.822046041488647
+            },
+            {
+              "nodeId": "fi1.node.check-host.net",
+              "location": "fi, Finland, Helsinki, 65.109.182.130, AS24940",
+              "reachable": true,
+              "statusCode": 0.578299045562744
+            },
+            {
+              "nodeId": "fr1.node.check-host.net",
+              "location": "fr, France, Roubaix, 185.19.33.131, AS49556",
+              "reachable": true,
+              "statusCode": 0.665699005126953
+            },
+            {
+              "nodeId": "fr2.node.check-host.net",
+              "location": "fr, France, Paris, 195.154.114.92, AS12876",
+              "reachable": true,
+              "statusCode": 0.714751005172729
+            },
+            {
+              "nodeId": "hk1.node.check-host.net",
+              "location": "hk, Hong Kong, Hong Kong, 141.98.234.68, AS207713",
+              "reachable": true,
+              "statusCode": 1.50765085220337
+            },
+            {
+              "nodeId": "hu1.node.check-host.net",
+              "location": "hu, Hungary, Nyiregyhaza, 45.9.168.235, AS211619",
+              "reachable": true,
+              "statusCode": 0.707794189453125
+            },
+            {
+              "nodeId": "id2.node.check-host.net",
+              "location": "id, Indonesia, Jakarta, 103.42.116.205, AS141968",
+              "reachable": true,
+              "statusCode": 3.25665903091431
+            },
+            {
+              "nodeId": "il2.node.check-host.net",
+              "location": "il, Israel, Netanya, 195.211.24.48, AS206446",
+              "reachable": true,
+              "statusCode": 0.85344409942627
+            },
+            {
+              "nodeId": "in2.node.check-host.net",
+              "location": "in, India, Delhi, 181.214.10.239, AS140641",
+              "reachable": true,
+              "statusCode": 1.00525188446045
+            },
+            {
+              "nodeId": "in3.node.check-host.net",
+              "location": "in, India, Hyderabad, 151.243.98.61, AS149573",
+              "reachable": true,
+              "statusCode": 1.00325012207031
+            },
+            {
+              "nodeId": "in4.node.check-host.net",
+              "location": "in, India, Bengaluru, 103.183.157.60, AS149573",
+              "reachable": true,
+              "statusCode": 1.00447988510132
+            },
+            {
+              "nodeId": "in5.node.check-host.net",
+              "location": "in, India, Kolkata, 151.243.12.65, AS149573",
+              "reachable": true,
+              "statusCode": 1.02077889442444
+            },
+            {
+              "nodeId": "ir1.node.check-host.net",
+              "location": "ir, Iran, Tehran, 185.105.238.209, AS47430",
+              "reachable": false,
+              "statusCode": null
+            },
+            {
+              "nodeId": "ir5.node.check-host.net",
+              "location": "ir, Iran, Isfahan, 185.79.159.20, AS58224",
+              "reachable": false,
+              "statusCode": null
+            },
+            {
+              "nodeId": "ir6.node.check-host.net",
+              "location": "ir, Iran, Karaj, 109.122.245.39, AS208264",
+              "reachable": false,
+              "statusCode": null
+            },
+            {
+              "nodeId": "it2.node.check-host.net",
+              "location": "it, Italy, Milan, 185.25.204.60, AS60798",
+              "reachable": true,
+              "statusCode": 2.44023108482361
+            },
+            {
+              "nodeId": "jp1.node.check-host.net",
+              "location": "jp, Japan, Tokyo, 103.214.169.52, AS149042",
+              "reachable": true,
+              "statusCode": 3.41778993606567
+            },
+            {
+              "nodeId": "kz1.node.check-host.net",
+              "location": "kz, Kazakhstan, Karaganda, 185.120.77.165, AS203087",
+              "reachable": true,
+              "statusCode": 0.916627883911133
+            },
+            {
+              "nodeId": "lt1.node.check-host.net",
+              "location": "lt, Lithuania, Vilnius, 88.119.179.10, AS198651",
+              "reachable": true,
+              "statusCode": 0.708413124084473
+            },
+            {
+              "nodeId": "md1.node.check-host.net",
+              "location": "md, Moldova, Chisinau, 178.17.171.235, AS43289",
+              "reachable": true,
+              "statusCode": 0.917064189910889
+            },
+            {
+              "nodeId": "nl1.node.check-host.net",
+              "location": "nl, Netherlands, Amsterdam, 185.209.161.145, AS14576",
+              "reachable": true,
+              "statusCode": 0.485639095306396
+            },
+            {
+              "nodeId": "nl2.node.check-host.net",
+              "location": "nl, Netherlands, Meppel, 195.211.27.85, AS206446",
+              "reachable": true,
+              "statusCode": 0.578594923019409
+            },
+            {
+              "nodeId": "pl1.node.check-host.net",
+              "location": "pl, Poland, Poznan, 178.216.200.169, AS31229",
+              "reachable": true,
+              "statusCode": 0.599591970443726
+            },
+            {
+              "nodeId": "pl2.node.check-host.net",
+              "location": "pl, Poland, Warsaw, 195.137.244.1, AS214379",
+              "reachable": true,
+              "statusCode": 0.855332136154175
+            },
+            {
+              "nodeId": "pt1.node.check-host.net",
+              "location": "pt, Portugal, Viana, 185.83.213.25, AS44222",
+              "reachable": true,
+              "statusCode": 1.18475914001465
+            },
+            {
+              "nodeId": "ro1.node.check-host.net",
+              "location": "ro, Romania, Bucharest, 107.149.201.15, AS211281",
+              "reachable": true,
+              "statusCode": 0.587554931640625
+            },
+            {
+              "nodeId": "rs1.node.check-host.net",
+              "location": "rs, Serbia, Belgrade, 194.146.57.64, AS35779",
+              "reachable": true,
+              "statusCode": 2.0720489025116
+            },
+            {
+              "nodeId": "ru1.node.check-host.net",
+              "location": "ru, Russia, Moscow, 185.130.104.238, AS14576",
+              "reachable": true,
+              "statusCode": 0.713510990142822
+            },
+            {
+              "nodeId": "ru2.node.check-host.net",
+              "location": "ru, Russia, Moscow, 194.26.229.20, AS210644",
+              "reachable": true,
+              "statusCode": 0.863533020019531
+            },
+            {
+              "nodeId": "ru3.node.check-host.net",
+              "location": "ru, Russia, Saint Petersburg, 185.221.199.82, AS210644",
+              "reachable": true,
+              "statusCode": 0.752645015716553
+            },
+            {
+              "nodeId": "se1.node.check-host.net",
+              "location": "se, Sweden, Stockholm, 78.40.116.61, AS200019",
+              "reachable": true,
+              "statusCode": 0.645184993743896
+            },
+            {
+              "nodeId": "se2.node.check-host.net",
+              "location": "se, Sweden, Stockholm, 195.137.245.1, AS214379",
+              "reachable": true,
+              "statusCode": 0.610702991485596
+            },
+            {
+              "nodeId": "sg1.node.check-host.net",
+              "location": "sg, Singapore, Singapore, 217.15.166.168, AS141995",
+              "reachable": true,
+              "statusCode": 1.14970588684082
+            },
+            {
+              "nodeId": "si1.node.check-host.net",
+              "location": "si, Slovenia, Maribor, 83.143.119.103, AS49592",
+              "reachable": true,
+              "statusCode": 0.668347120285034
+            },
+            {
+              "nodeId": "tr1.node.check-host.net",
+              "location": "tr, Turkey, Istanbul, 185.23.17.21, AS211557",
+              "reachable": true,
+              "statusCode": 0.901950120925903
+            },
+            {
+              "nodeId": "tr2.node.check-host.net",
+              "location": "tr, Turkey, Istanbul, 77.92.151.181, AS44620",
+              "reachable": true,
+              "statusCode": 0.813508033752441
+            },
+            {
+              "nodeId": "ua1.node.check-host.net",
+              "location": "ua, Ukraine, Khmelnytskyi, 185.86.77.126, AS201094",
+              "reachable": true,
+              "statusCode": 0.780601024627686
+            },
+            {
+              "nodeId": "ua2.node.check-host.net",
+              "location": "ua, Ukraine, Kyiv, 91.231.182.39, AS214379",
+              "reachable": true,
+              "statusCode": 0.80727219581604
+            },
+            {
+              "nodeId": "ua3.node.check-host.net",
+              "location": "ua, Ukraine, Kyiv, 104.28.192.94, AS13335",
+              "reachable": true,
+              "statusCode": 0.851903915405273
+            },
+            {
+              "nodeId": "uk1.node.check-host.net",
+              "location": "gb, UK, Coventry, 45.159.248.77, AS209847",
+              "reachable": true,
+              "statusCode": 2.37448310852051
+            },
+            {
+              "nodeId": "us1.node.check-host.net",
+              "location": "us, USA, Los Angeles, 38.145.202.12, AS18978",
+              "reachable": true,
+              "statusCode": 1.08947777748108
+            },
+            {
+              "nodeId": "us2.node.check-host.net",
+              "location": "us, USA, Dallas, 64.72.205.76, AS215703",
+              "reachable": true,
+              "statusCode": 2.87905287742615
+            },
+            {
+              "nodeId": "us3.node.check-host.net",
+              "location": "us, USA, Atlanta, 147.45.60.14, AS215540",
+              "reachable": true,
+              "statusCode": 2.56050086021423
+            },
+            {
+              "nodeId": "us4.node.check-host.net",
+              "location": "us, USA, Miami, 157.254.174.204, AS26141",
+              "reachable": true,
+              "statusCode": 2.13847994804382
+            },
+            {
+              "nodeId": "vn1.node.check-host.net",
+              "location": "vn, Vietnam, Ho Chi Minh City, 45.252.248.142, AS63760",
+              "reachable": true,
+              "statusCode": 1.31920695304871
+            }
+          ]
+        },
+        "ipBlockAnalysis": {
+          "blocked": false,
+          "partialBlock": true,
+          "analysis": "Site reachable from 55/58 regions (95%). Unreachable from: ir, Iran, Tehran, 185.105.238.209, AS47430, ir, Iran, Isfahan, 185.79.159.20, AS58224, ir, Iran, Karaj, 109.122.245.39, AS208264. Minor regional accessibility issues.",
+          "reachablePercent": 94.82758620689656,
+          "reachableCount": 55,
+          "totalNodes": 58,
+          "unreachableRegions": [
+            {
+              "location": "ir, Iran, Tehran, 185.105.238.209, AS47430",
+              "error": null,
+              "statusCode": null
+            },
+            {
+              "location": "ir, Iran, Isfahan, 185.79.159.20, AS58224",
+              "error": null,
+              "statusCode": null
+            },
+            {
+              "location": "ir, Iran, Karaj, 109.122.245.39, AS208264",
+              "error": null,
+              "statusCode": null
+            }
+          ]
         }
       }
     ],
@@ -543,7 +964,525 @@
           "blocked": false,
           "analysis": "No multi-region data available."
         }
+      },
+      {
+        "timestamp": "2026-03-31T10:40:18.509Z",
+        "runnerIP": "135.232.227.148",
+        "direct": {
+          "reachable": true,
+          "status": 200,
+          "latency": 671,
+          "error": null
+        },
+        "globalCheck": {
+          "checked": false,
+          "results": []
+        },
+        "ipBlockAnalysis": {
+          "blocked": false,
+          "analysis": "No multi-region data available."
+        }
+      }
+    ],
+    "https://kodework.com": [
+      {
+        "timestamp": "2026-03-31T10:40:26.208Z",
+        "runnerIP": "135.232.227.148",
+        "direct": {
+          "reachable": true,
+          "status": 200,
+          "latency": 298,
+          "error": null
+        },
+        "globalCheck": {
+          "checked": true,
+          "results": [
+            {
+              "nodeId": "ae1.node.check-host.net",
+              "location": "ae, UAE, Dubai, 176.125.231.26, AS9009",
+              "reachable": true,
+              "statusCode": 1.8604199886322
+            },
+            {
+              "nodeId": "at1.node.check-host.net",
+              "location": "at, Austria, Vienna, 185.224.3.111, AS64457",
+              "reachable": true,
+              "statusCode": 0.490362882614136
+            },
+            {
+              "nodeId": "bg1.node.check-host.net",
+              "location": "bg, Bulgaria, Sofia, 93.123.16.89, AS9028",
+              "reachable": true,
+              "statusCode": 1.41948699951172
+            },
+            {
+              "nodeId": "br1.node.check-host.net",
+              "location": "br, Brazil, Sao Paulo, 45.162.230.209, AS268581",
+              "reachable": true,
+              "statusCode": 0.346975088119507
+            },
+            {
+              "nodeId": "br2.node.check-host.net",
+              "location": "br, Brazil, Sao Paulo, 143.14.79.33, AS206971",
+              "reachable": true,
+              "statusCode": 0.360067844390869
+            },
+            {
+              "nodeId": "ca1.node.check-host.net",
+              "location": "ca, Canada, Vancouver, 198.135.169.20, AS396993",
+              "reachable": true,
+              "statusCode": 0.345745086669922
+            },
+            {
+              "nodeId": "ch1.node.check-host.net",
+              "location": "ch, Switzerland, Zurich, 179.43.148.195, AS51852",
+              "reachable": true,
+              "statusCode": 0.548271894454956
+            },
+            {
+              "nodeId": "cn1.node.check-host.net",
+              "location": "cn, China, Zhejiang, 110.42.102.106, AS136188",
+              "reachable": true,
+              "statusCode": 2.44414687156677
+            },
+            {
+              "nodeId": "cy1.node.check-host.net",
+              "location": "cy, Cyprus, Larnaca, 91.199.41.71, AS6866",
+              "reachable": true,
+              "statusCode": 0.738312959671021
+            },
+            {
+              "nodeId": "cz1.node.check-host.net",
+              "location": "cz, Czechia, C.Budejovice, 77.75.230.51, AS209847",
+              "reachable": true,
+              "statusCode": 0.495668888092041
+            },
+            {
+              "nodeId": "de1.node.check-host.net",
+              "location": "de, Germany, Nuremberg, 116.203.22.31, AS24940",
+              "reachable": true,
+              "statusCode": 0.512178182601929
+            },
+            {
+              "nodeId": "de4.node.check-host.net",
+              "location": "de, Germany, Frankfurt, 185.37.147.117, AS34549",
+              "reachable": true,
+              "statusCode": 0.518844127655029
+            },
+            {
+              "nodeId": "es1.node.check-host.net",
+              "location": "es, Spain, Madrid, 78.40.111.151, AS215691",
+              "reachable": true,
+              "statusCode": 0.545262098312378
+            },
+            {
+              "nodeId": "es2.node.check-host.net",
+              "location": "es, Spain, Barcelona, 194.26.100.165, AS26141",
+              "reachable": true,
+              "statusCode": 0.561309099197388
+            },
+            {
+              "nodeId": "fi1.node.check-host.net",
+              "location": "fi, Finland, Helsinki, 65.109.182.130, AS24940",
+              "reachable": true,
+              "statusCode": 0.523688077926636
+            },
+            {
+              "nodeId": "fr1.node.check-host.net",
+              "location": "fr, France, Roubaix, 185.19.33.131, AS49556",
+              "reachable": true,
+              "statusCode": 0.482134103775024
+            },
+            {
+              "nodeId": "fr2.node.check-host.net",
+              "location": "fr, France, Paris, 195.154.114.92, AS12876",
+              "reachable": true,
+              "statusCode": 0.509268999099731
+            },
+            {
+              "nodeId": "hk1.node.check-host.net",
+              "location": "hk, Hong Kong, Hong Kong, 141.98.234.68, AS207713",
+              "reachable": true,
+              "statusCode": 0.912689924240112
+            },
+            {
+              "nodeId": "hu1.node.check-host.net",
+              "location": "hu, Hungary, Nyiregyhaza, 45.9.168.235, AS211619",
+              "reachable": true,
+              "statusCode": 0.522324800491333
+            },
+            {
+              "nodeId": "id2.node.check-host.net",
+              "location": "id, Indonesia, Jakarta, 103.42.116.205, AS141968",
+              "reachable": true,
+              "statusCode": 0.641842126846313
+            },
+            {
+              "nodeId": "il2.node.check-host.net",
+              "location": "il, Israel, Netanya, 195.211.24.48, AS206446",
+              "reachable": true,
+              "statusCode": 0.690375089645386
+            },
+            {
+              "nodeId": "in2.node.check-host.net",
+              "location": "in, India, Delhi, 181.214.10.239, AS140641",
+              "reachable": true,
+              "statusCode": 0.826812028884888
+            },
+            {
+              "nodeId": "in3.node.check-host.net",
+              "location": "in, India, Hyderabad, 151.243.98.61, AS149573",
+              "reachable": true,
+              "statusCode": 0.807819843292236
+            },
+            {
+              "nodeId": "in4.node.check-host.net",
+              "location": "in, India, Bengaluru, 103.183.157.60, AS149573",
+              "reachable": true,
+              "statusCode": 0.893815040588379
+            },
+            {
+              "nodeId": "in5.node.check-host.net",
+              "location": "in, India, Kolkata, 151.243.12.65, AS149573",
+              "reachable": true,
+              "statusCode": 1.00507688522339
+            },
+            {
+              "nodeId": "ir1.node.check-host.net",
+              "location": "ir, Iran, Tehran, 185.105.238.209, AS47430",
+              "reachable": false,
+              "statusCode": null
+            },
+            {
+              "nodeId": "ir5.node.check-host.net",
+              "location": "ir, Iran, Isfahan, 185.79.159.20, AS58224",
+              "reachable": false,
+              "statusCode": null
+            },
+            {
+              "nodeId": "ir6.node.check-host.net",
+              "location": "ir, Iran, Karaj, 109.122.245.39, AS208264",
+              "reachable": false,
+              "statusCode": null
+            },
+            {
+              "nodeId": "it2.node.check-host.net",
+              "location": "it, Italy, Milan, 185.25.204.60, AS60798",
+              "reachable": true,
+              "statusCode": 0.549353122711182
+            },
+            {
+              "nodeId": "jp1.node.check-host.net",
+              "location": "jp, Japan, Tokyo, 103.214.169.52, AS149042",
+              "reachable": true,
+              "statusCode": 0.719223976135254
+            },
+            {
+              "nodeId": "kz1.node.check-host.net",
+              "location": "kz, Kazakhstan, Karaganda, 185.120.77.165, AS203087",
+              "reachable": true,
+              "statusCode": 0.947859048843384
+            },
+            {
+              "nodeId": "lt1.node.check-host.net",
+              "location": "lt, Lithuania, Vilnius, 88.119.179.10, AS198651",
+              "reachable": true,
+              "statusCode": 0.610833168029785
+            },
+            {
+              "nodeId": "md1.node.check-host.net",
+              "location": "md, Moldova, Chisinau, 178.17.171.235, AS43289",
+              "reachable": true,
+              "statusCode": 0.643448829650879
+            },
+            {
+              "nodeId": "nl1.node.check-host.net",
+              "location": "nl, Netherlands, Amsterdam, 185.209.161.145, AS14576",
+              "reachable": true,
+              "statusCode": 0.468997001647949
+            },
+            {
+              "nodeId": "nl2.node.check-host.net",
+              "location": "nl, Netherlands, Meppel, 195.211.27.85, AS206446",
+              "reachable": true,
+              "statusCode": 0.470645904541016
+            },
+            {
+              "nodeId": "pl1.node.check-host.net",
+              "location": "pl, Poland, Poznan, 178.216.200.169, AS31229",
+              "reachable": true,
+              "statusCode": 0.526896953582764
+            },
+            {
+              "nodeId": "pl2.node.check-host.net",
+              "location": "pl, Poland, Warsaw, 195.137.244.1, AS214379",
+              "reachable": true,
+              "statusCode": 0.634552955627441
+            },
+            {
+              "nodeId": "pt1.node.check-host.net",
+              "location": "pt, Portugal, Viana, 185.83.213.25, AS44222",
+              "reachable": true,
+              "statusCode": 0.64634108543396
+            },
+            {
+              "nodeId": "ro1.node.check-host.net",
+              "location": "ro, Romania, Bucharest, 107.149.201.15, AS211281",
+              "reachable": true,
+              "statusCode": 0.580042123794556
+            },
+            {
+              "nodeId": "rs1.node.check-host.net",
+              "location": "rs, Serbia, Belgrade, 194.146.57.64, AS35779",
+              "reachable": true,
+              "statusCode": 1.13701295852661
+            },
+            {
+              "nodeId": "ru1.node.check-host.net",
+              "location": "ru, Russia, Moscow, 185.130.104.238, AS14576",
+              "reachable": true,
+              "statusCode": 0.609794855117798
+            },
+            {
+              "nodeId": "ru2.node.check-host.net",
+              "location": "ru, Russia, Moscow, 194.26.229.20, AS210644",
+              "reachable": true,
+              "statusCode": 0.64017391204834
+            },
+            {
+              "nodeId": "ru3.node.check-host.net",
+              "location": "ru, Russia, Saint Petersburg, 185.221.199.82, AS210644",
+              "reachable": true,
+              "statusCode": 0.637362003326416
+            },
+            {
+              "nodeId": "se1.node.check-host.net",
+              "location": "se, Sweden, Stockholm, 78.40.116.61, AS200019",
+              "reachable": true,
+              "statusCode": 0.506919860839844
+            },
+            {
+              "nodeId": "se2.node.check-host.net",
+              "location": "se, Sweden, Stockholm, 195.137.245.1, AS214379",
+              "reachable": true,
+              "statusCode": 0.5295569896698
+            },
+            {
+              "nodeId": "sg1.node.check-host.net",
+              "location": "sg, Singapore, Singapore, 217.15.166.168, AS141995",
+              "reachable": true,
+              "statusCode": 0.681879043579102
+            },
+            {
+              "nodeId": "si1.node.check-host.net",
+              "location": "si, Slovenia, Maribor, 83.143.119.103, AS49592",
+              "reachable": true,
+              "statusCode": 0.616979837417603
+            },
+            {
+              "nodeId": "tr1.node.check-host.net",
+              "location": "tr, Turkey, Istanbul, 185.23.17.21, AS211557",
+              "reachable": true,
+              "statusCode": 0.731429100036621
+            },
+            {
+              "nodeId": "tr2.node.check-host.net",
+              "location": "tr, Turkey, Istanbul, 77.92.151.181, AS44620",
+              "reachable": true,
+              "statusCode": 0.625837087631226
+            },
+            {
+              "nodeId": "ua1.node.check-host.net",
+              "location": "ua, Ukraine, Khmelnytskyi, 185.86.77.126, AS201094",
+              "reachable": true,
+              "statusCode": 0.66358208656311
+            },
+            {
+              "nodeId": "ua2.node.check-host.net",
+              "location": "ua, Ukraine, Kyiv, 91.231.182.39, AS214379",
+              "reachable": true,
+              "statusCode": 0.613868951797485
+            },
+            {
+              "nodeId": "ua3.node.check-host.net",
+              "location": "ua, Ukraine, Kyiv, 104.28.192.94, AS13335",
+              "reachable": true,
+              "statusCode": 0.77581787109375
+            },
+            {
+              "nodeId": "uk1.node.check-host.net",
+              "location": "gb, UK, Coventry, 45.159.248.77, AS209847",
+              "reachable": true,
+              "statusCode": 0.497285127639771
+            },
+            {
+              "nodeId": "us1.node.check-host.net",
+              "location": "us, USA, Los Angeles, 38.145.202.12, AS18978",
+              "reachable": true,
+              "statusCode": 1.10071206092834
+            },
+            {
+              "nodeId": "us2.node.check-host.net",
+              "location": "us, USA, Dallas, 64.72.205.76, AS215703",
+              "reachable": true,
+              "statusCode": 0.316699028015137
+            },
+            {
+              "nodeId": "us3.node.check-host.net",
+              "location": "us, USA, Atlanta, 147.45.60.14, AS215540",
+              "reachable": true,
+              "statusCode": 0.262696027755737
+            },
+            {
+              "nodeId": "us4.node.check-host.net",
+              "location": "us, USA, Miami, 157.254.174.204, AS26141",
+              "reachable": true,
+              "statusCode": 0.609663963317871
+            },
+            {
+              "nodeId": "vn1.node.check-host.net",
+              "location": "vn, Vietnam, Ho Chi Minh City, 45.252.248.142, AS63760",
+              "reachable": true,
+              "statusCode": 0.904748916625977
+            }
+          ]
+        },
+        "ipBlockAnalysis": {
+          "blocked": false,
+          "partialBlock": true,
+          "analysis": "Site reachable from 55/58 regions (95%). Unreachable from: ir, Iran, Tehran, 185.105.238.209, AS47430, ir, Iran, Isfahan, 185.79.159.20, AS58224, ir, Iran, Karaj, 109.122.245.39, AS208264. Minor regional accessibility issues.",
+          "reachablePercent": 94.82758620689656,
+          "reachableCount": 55,
+          "totalNodes": 58,
+          "unreachableRegions": [
+            {
+              "location": "ir, Iran, Tehran, 185.105.238.209, AS47430",
+              "error": null,
+              "statusCode": null
+            },
+            {
+              "location": "ir, Iran, Isfahan, 185.79.159.20, AS58224",
+              "error": null,
+              "statusCode": null
+            },
+            {
+              "location": "ir, Iran, Karaj, 109.122.245.39, AS208264",
+              "error": null,
+              "statusCode": null
+            }
+          ]
+        }
       }
     ]
+  },
+  "_aiops": {
+    "sites": {
+      "https://equinavia.com": {
+        "siteName": "Equinavia",
+        "siteUrl": "https://equinavia.com",
+        "predictions": {
+          "latency": {
+            "prediction": null,
+            "reason": "Insufficient data (need 20+ checks)."
+          },
+          "sla": {
+            "prediction": null,
+            "reason": "Insufficient data for this month."
+          },
+          "alerts": []
+        },
+        "anomalies": {
+          "anomalies": [],
+          "context": "Insufficient data for anomaly detection."
+        },
+        "historicalMatch": null,
+        "hasCriticalAlerts": false
+      },
+      "https://preikestolenbasecamp.com": {
+        "siteName": "Preikestolen",
+        "siteUrl": "https://preikestolenbasecamp.com",
+        "predictions": {
+          "latency": {
+            "prediction": null,
+            "reason": "Insufficient data (need 20+ checks)."
+          },
+          "sla": {
+            "prediction": null,
+            "reason": "Insufficient data for this month."
+          },
+          "alerts": []
+        },
+        "anomalies": {
+          "anomalies": [],
+          "context": "Insufficient data for anomaly detection."
+        },
+        "historicalMatch": null,
+        "hasCriticalAlerts": false
+      },
+      "https://kodework.com": {
+        "siteName": "kodework",
+        "siteUrl": "https://kodework.com",
+        "predictions": {
+          "latency": {
+            "prediction": null,
+            "reason": "Insufficient data (need 20+ checks)."
+          },
+          "sla": {
+            "prediction": null,
+            "reason": "Insufficient data for this month."
+          },
+          "alerts": []
+        },
+        "anomalies": {
+          "anomalies": [],
+          "context": "Insufficient data for anomaly detection."
+        },
+        "historicalMatch": null,
+        "hasCriticalAlerts": false
+      }
+    },
+    "rootCauseAnalysis": {
+      "severity": "critical",
+      "hypothesis": "External service issue: Cloudflare. Monitor their status pages for resolution.",
+      "findings": [
+        {
+          "type": "external_service_issue",
+          "severity": "critical",
+          "finding": "External service issue detected: Cloudflare (Minor Service Outage).",
+          "services": [
+            {
+              "name": "Cloudflare",
+              "status": "minor",
+              "description": "Minor Service Outage",
+              "hasIssues": true
+            }
+          ]
+        }
+      ],
+      "externalServices": [
+        {
+          "name": "Cloudflare",
+          "status": "minor",
+          "description": "Minor Service Outage",
+          "hasIssues": true
+        }
+      ],
+      "causalChain": null,
+      "timestamp": "2026-03-31T10:40:32.195Z"
+    },
+    "criticalAlerts": [
+      {
+        "type": "external_service_issue",
+        "severity": "critical",
+        "message": "External service issue detected: Cloudflare (Minor Service Outage)."
+      }
+    ],
+    "summary": {
+      "totalSites": 3,
+      "sitesWithAlerts": 0,
+      "totalAlerts": 1,
+      "overallHealth": "critical"
+    },
+    "timestamp": "2026-03-31T10:40:32.196Z"
   }
 }
