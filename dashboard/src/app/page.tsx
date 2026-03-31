@@ -22,267 +22,199 @@ interface SiteStatus {
   regionCheck: Record<string, unknown> | null;
 }
 
-interface AIOpsAlert {
-  site?: string;
-  type: string;
-  severity: string;
-  message: string;
-}
-
-interface AIOpsData {
-  sites: Record<string, {
-    siteName: string;
-    predictions: {
-      latency: { prediction: number | null; reason: string; severity?: string; trend?: string; rateOfChange?: number; predictedBreachTime?: string };
-      sla: { prediction: number | null; reason: string; severity?: string; currentUptime?: number; projectedUptime?: number; willBreach?: boolean };
-      alerts: AIOpsAlert[];
-    };
-    anomalies: {
-      anomalies: { type: string; severity: string; message: string; value?: number; baseline?: number }[];
-      timeContext: string | null;
-    };
-    historicalMatch: { matchCount: number; message: string } | null;
-  }>;
-  rootCauseAnalysis: {
-    severity: string;
-    hypothesis: string;
-    findings: { type: string; severity: string; finding: string }[];
-    externalServices: { name: string; status: string; description: string; hasIssues: boolean }[];
-    causalChain: { chain: { site: string; position: string; delay?: number }[] } | null;
-  };
-  criticalAlerts: AIOpsAlert[];
-  summary: { overallHealth: string; totalAlerts: number; sitesWithAlerts: number };
-  timestamp: string;
-}
-
-interface SecurityVuln {
-  name: string;
-  path: string;
-  severity: string;
-  finding: string;
-  recommendation: string;
-  status: number;
-}
-
-interface SecuritySiteResult {
-  site: string;
-  url: string;
-  riskLevel: string;
-  vulnerabilities: SecurityVuln[];
-  exposedEndpoints: { name: string; path: string; finding: string; severity: string }[];
-  headers: {
-    score: number;
-    missing: { name: string; severity: string; recommendation: string }[];
-    present: { name: string; value: string }[];
-    disclosures: { name: string; header: string; value: string; recommendation: string }[];
-  };
-  summary: {
-    endpointsChecked: number;
-    vulnerabilities: number;
-    critical: number;
-    high: number;
-    medium: number;
-    headersPresent: number;
-    headersMissing: number;
-    infoDisclosures: number;
-  };
-  timestamp: string;
-}
-
-interface SecurityData {
-  sites: Record<string, SecuritySiteResult>;
-  overall: {
-    totalSites: number;
-    totalVulnerabilities: number;
-    worstRiskLevel: string;
-    avgHeaderScore: number;
-  };
-  timestamp: string;
-}
-
 interface StatusResponse {
   sites: SiteStatus[];
   lastUpdated: string | null;
   totalSites: number;
   sitesUp: number;
   sitesDown: number;
-  aiops: AIOpsData | null;
-  security: SecurityData | null;
 }
 
+// ─── helpers ───
+function timeAgo(iso: string) {
+  const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 60) return `${s}s ago`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
+function uptimeColor(v: number | null) {
+  if (v == null) return "text-gray-400";
+  if (v >= 99.9) return "text-green-500";
+  if (v >= 99) return "text-green-600";
+  if (v >= 95) return "text-yellow-500";
+  return "text-red-500";
+}
+
+function latencyLabel(ms: number | null) {
+  if (ms == null) return { text: "—", color: "text-gray-400" };
+  if (ms < 300) return { text: `${ms}ms`, color: "text-green-500" };
+  if (ms < 1000) return { text: `${ms}ms`, color: "text-yellow-500" };
+  return { text: `${ms}ms`, color: "text-red-500" };
+}
+
+// ─── main ───
 export default function Dashboard() {
   const [status, setStatus] = useState<StatusResponse | null>(null);
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<string | null>(null);
 
-  const fetchStatus = useCallback(async () => {
+  const refresh = useCallback(async () => {
     try {
-      const res = await fetch("/api/status");
-      const data = await res.json();
-      setStatus(data);
-    } catch (err) {
-      console.error("Failed to fetch status:", err);
-    } finally {
+      const r = await fetch("/api/status");
+      setStatus(await r.json());
+    } catch { /* ignore */ } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchStatus();
-    const interval = setInterval(fetchStatus, 30000);
-    return () => clearInterval(interval);
-  }, [fetchStatus]);
+    refresh();
+    const i = setInterval(refresh, 30_000);
+    return () => clearInterval(i);
+  }, [refresh]);
 
-  const handleDelete = async (url: string, name: string) => {
-    if (!confirm(`Remove "${name}" from monitoring?`)) return;
+  const remove = async (url: string, name: string) => {
+    if (!confirm(`Remove "${name}"?`)) return;
     await fetch("/api/sites", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url }),
     });
-    fetchStatus();
+    setSelected(null);
+    refresh();
   };
 
   if (loading) {
+    return <div className="flex items-center justify-center h-screen text-gray-400">Loading...</div>;
+  }
+
+  const sites = status?.sites || [];
+  const up = status?.sitesUp || 0;
+  const down = status?.sitesDown || 0;
+  const total = sites.length;
+
+  return (
+    <div className="min-h-screen bg-white">
+      {/* ── top bar ── */}
+      <header className="border-b border-gray-100 bg-white sticky top-0 z-30">
+        <div className="max-w-5xl mx-auto flex items-center justify-between px-4 h-14">
+          <div className="flex items-center gap-3">
+            <div className="w-7 h-7 bg-green-500 rounded-md flex items-center justify-center">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="white" strokeWidth="2.5"><path d="M5 12l5 5L20 7"/></svg>
+            </div>
+            <span className="font-semibold text-gray-900 text-lg">Site Monitor</span>
+          </div>
+          <button
+            onClick={() => setShowAdd(true)}
+            className="bg-green-500 hover:bg-green-600 text-white text-sm font-medium px-4 py-2 rounded-md transition-colors cursor-pointer"
+          >
+            + Add Monitor
+          </button>
+        </div>
+      </header>
+
+      <div className="max-w-5xl mx-auto px-4 py-6">
+        {/* ── summary strip ── */}
+        <div className="flex items-center gap-6 mb-6 text-sm">
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold text-gray-800">{total}</span>
+            <span className="text-gray-400">monitors</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-green-500" />
+            <span className="font-semibold text-green-600">{up}</span>
+            <span className="text-gray-400">up</span>
+          </div>
+          {down > 0 && (
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-red-500" />
+              <span className="font-semibold text-red-600">{down}</span>
+              <span className="text-gray-400">down</span>
+            </div>
+          )}
+          {status?.lastUpdated && (
+            <span className="text-gray-300 text-xs ml-auto">
+              Updated {timeAgo(status.lastUpdated)}
+            </span>
+          )}
+        </div>
+
+        {/* ── empty state ── */}
+        {total === 0 && (
+          <div className="text-center py-20">
+            <div className="text-gray-300 text-5xl mb-4">+</div>
+            <p className="text-gray-500 mb-4">No monitors yet</p>
+            <button onClick={() => setShowAdd(true)} className="text-green-500 font-medium hover:underline cursor-pointer">
+              Add your first monitor
+            </button>
+          </div>
+        )}
+
+        {/* ── monitor list ── */}
+        <div className="space-y-px">
+          {sites.map((site) => (
+            <MonitorRow
+              key={site.url}
+              site={site}
+              expanded={selected === site.url}
+              onToggle={() => setSelected(selected === site.url ? null : site.url)}
+              onRemove={() => remove(site.url, site.name)}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* ── add modal ── */}
+      {showAdd && (
+        <AddMonitor
+          onClose={() => setShowAdd(false)}
+          onAdded={() => { setShowAdd(false); refresh(); }}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── uptime bar (90 segments like UptimeRobot) ───
+function UptimeBar({ data }: { data: { t: string; l: number }[] }) {
+  // Group into 30 buckets from response history
+  const buckets = 30;
+  if (data.length < 2) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-slate-400 text-lg">Loading dashboard...</div>
+      <div className="flex gap-[1px] h-8 items-end">
+        {Array.from({ length: buckets }).map((_, i) => (
+          <div key={i} className="flex-1 bg-gray-100 rounded-sm h-full" />
+        ))}
       </div>
     );
   }
 
-  const allUp = status?.sitesDown === 0 && (status?.sitesUp || 0) > 0;
-  const anyDown = (status?.sitesDown || 0) > 0;
-
-  return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Site Monitor</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Kilowott Engineering
-            {status?.lastUpdated && (
-              <> &middot; Updated {new Date(status.lastUpdated).toLocaleString()}</>
-            )}
-          </p>
-        </div>
-        <button
-          onClick={() => setShowAddForm(true)}
-          className="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors cursor-pointer"
-        >
-          + Add Site
-        </button>
-      </div>
-
-      {/* Overall Status */}
-      <div
-        className={`rounded-xl p-5 mb-6 text-center font-semibold text-lg ${
-          allUp
-            ? "bg-green-50 text-green-700 border border-green-200"
-            : anyDown
-            ? "bg-red-50 text-red-700 border border-red-200"
-            : "bg-slate-100 text-slate-600 border border-slate-200"
-        }`}
-      >
-        {allUp
-          ? "All Systems Operational"
-          : anyDown
-          ? "Partial Outage Detected"
-          : status?.totalSites === 0
-          ? "No sites configured — add one to get started"
-          : "Checking..."}
-      </div>
-
-      {/* Stats Bar */}
-      {(status?.totalSites || 0) > 0 && (
-        <div className="grid grid-cols-4 gap-4 mb-6">
-          <StatCard label="Sites" value={status?.totalSites || 0} />
-          <StatCard label="Up" value={status?.sitesUp || 0} color="text-green-600" />
-          <StatCard label="Down" value={status?.sitesDown || 0} color={anyDown ? "text-red-600" : undefined} />
-          <StatCard
-            label="Incidents"
-            value={status?.sites.reduce((s, site) => s + site.totalIncidents, 0) || 0}
-          />
-        </div>
-      )}
-
-      {/* AIOps Panel */}
-      {status?.aiops && <AIOpsPanel aiops={status.aiops} />}
-
-      {/* Security Panel */}
-      {status?.security && <SecurityPanel security={status.security} />}
-
-      {/* Add Site Modal */}
-      {showAddForm && (
-        <AddSiteForm
-          onClose={() => setShowAddForm(false)}
-          onAdded={() => {
-            setShowAddForm(false);
-            fetchStatus();
-          }}
-        />
-      )}
-
-      {/* Site Cards */}
-      <div className="space-y-4">
-        {status?.sites.map((site) => (
-          <SiteCard key={site.url} site={site} onDelete={handleDelete} />
-        ))}
-      </div>
-
-      {/* Footer */}
-      <div className="text-center text-xs text-slate-400 mt-12 pb-8">
-        Powered by Site Monitor &middot; Checks run every 5 minutes via GitHub Actions
-      </div>
-    </div>
-  );
-}
-
-function StatCard({ label, value, color }: { label: string; value: number; color?: string }) {
-  return (
-    <div className="bg-white border border-slate-200 rounded-xl p-4 text-center">
-      <div className={`text-2xl font-bold ${color || "text-slate-800"}`}>{value}</div>
-      <div className="text-xs text-slate-500 mt-1">{label}</div>
-    </div>
-  );
-}
-
-function UptimeBadge({ label, value }: { label: string; value: number | null }) {
-  const color =
-    value == null
-      ? "text-slate-400"
-      : value >= 99.9
-      ? "text-green-600"
-      : value >= 99
-      ? "text-lime-600"
-      : value >= 95
-      ? "text-orange-500"
-      : "text-red-600";
-  return (
-    <div className="text-center">
-      <div className="text-[11px] text-slate-400">{label}</div>
-      <div className={`text-base font-bold ${color}`}>
-        {value != null ? value.toFixed(2) + "%" : "N/A"}
-      </div>
-    </div>
-  );
-}
-
-function MiniChart({ data }: { data: { t: string; l: number }[] }) {
-  if (data.length < 2) return <div className="text-xs text-slate-400">No data yet</div>;
   const max = Math.max(...data.map((d) => d.l), 1);
+  const perBucket = Math.ceil(data.length / buckets);
+  const grouped = Array.from({ length: buckets }).map((_, i) => {
+    const slice = data.slice(i * perBucket, (i + 1) * perBucket);
+    if (slice.length === 0) return null;
+    const avg = slice.reduce((s, d) => s + d.l, 0) / slice.length;
+    return avg;
+  });
+
   return (
-    <div className="flex items-end gap-[1px] h-10">
-      {data.map((d, i) => {
-        const h = (d.l / max) * 100;
-        const color = d.l < 500 ? "bg-green-500" : d.l < 1500 ? "bg-orange-400" : "bg-red-500";
+    <div className="flex gap-[1px] h-8 items-end">
+      {grouped.map((avg, i) => {
+        if (avg == null) return <div key={i} className="flex-1 bg-gray-100 rounded-sm h-full" />;
+        const h = Math.max(15, (avg / max) * 100);
+        const color = avg < 500 ? "bg-green-400" : avg < 1500 ? "bg-yellow-400" : "bg-red-400";
         return (
           <div
             key={i}
-            className={`${color} rounded-t-sm min-w-[3px] flex-1`}
-            style={{ height: `${Math.max(4, h)}%` }}
-            title={`${new Date(d.t).toLocaleTimeString()} — ${d.l}ms`}
+            className={`flex-1 ${color} rounded-sm transition-all`}
+            style={{ height: `${h}%` }}
+            title={`${Math.round(avg)}ms`}
           />
         );
       })}
@@ -290,642 +222,214 @@ function MiniChart({ data }: { data: { t: string; l: number }[] }) {
   );
 }
 
-function SiteCard({
+// ─── single monitor row ───
+function MonitorRow({
   site,
-  onDelete,
+  expanded,
+  onToggle,
+  onRemove,
 }: {
   site: SiteStatus;
-  onDelete: (url: string, name: string) => void;
+  expanded: boolean;
+  onToggle: () => void;
+  onRemove: () => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const isUp = site.currentStatus === "up";
+  const isDown = site.currentStatus === "down";
+  const lat = latencyLabel(site.lastLatency);
+  const u24 = site.uptime["24h"];
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-sm transition-shadow">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <span
-            className={`w-3 h-3 rounded-full ${
-              site.currentStatus === "up"
-                ? "bg-green-500"
-                : site.currentStatus === "down"
-                ? "bg-red-500"
-                : "bg-slate-300"
-            }`}
-          />
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-slate-900">{site.name}</span>
-              {site.team && (
-                <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-medium rounded-full">
-                  {site.team}
-                </span>
-              )}
-              {site.tags.map((t) => (
-                <span
-                  key={t}
-                  className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] rounded-full"
-                >
-                  {t}
-                </span>
-              ))}
-            </div>
-            <a
-              href={site.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-blue-500 hover:underline"
-            >
-              {site.url}
-            </a>
-          </div>
+    <div className={`border border-gray-100 rounded-lg mb-2 overflow-hidden transition-shadow ${expanded ? "shadow-sm" : ""}`}>
+      {/* main row */}
+      <div
+        onClick={onToggle}
+        className="flex items-center gap-4 px-4 py-3.5 cursor-pointer hover:bg-gray-50 transition-colors"
+      >
+        {/* status dot */}
+        <span className={`w-3 h-3 rounded-full flex-shrink-0 ${isUp ? "bg-green-500" : isDown ? "bg-red-500" : "bg-gray-300"}`} />
+
+        {/* name + url */}
+        <div className="flex-1 min-w-0">
+          <div className="font-medium text-gray-900 truncate">{site.name}</div>
+          <div className="text-xs text-gray-400 truncate">{site.url}</div>
         </div>
-        <div className="flex items-center gap-3">
-          <span
-            className={`text-sm font-semibold ${
-              site.currentStatus === "up"
-                ? "text-green-600"
-                : site.currentStatus === "down"
-                ? "text-red-600"
-                : "text-slate-400"
-            }`}
-          >
-            {site.currentStatus === "up"
-              ? "Operational"
-              : site.currentStatus === "down"
-              ? "Down"
-              : "Unknown"}
+
+        {/* uptime % */}
+        <div className="text-right flex-shrink-0 w-20">
+          <div className={`text-sm font-semibold ${uptimeColor(u24)}`}>
+            {u24 != null ? `${u24.toFixed(1)}%` : "—"}
+          </div>
+          <div className="text-[10px] text-gray-400">24h</div>
+        </div>
+
+        {/* response time */}
+        <div className="text-right flex-shrink-0 w-20">
+          <div className={`text-sm font-semibold ${lat.color}`}>{lat.text}</div>
+          <div className="text-[10px] text-gray-400">latency</div>
+        </div>
+
+        {/* status badge */}
+        <div className="flex-shrink-0 w-16 text-right">
+          <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${
+            isUp ? "bg-green-50 text-green-600" : isDown ? "bg-red-50 text-red-600" : "bg-gray-100 text-gray-400"
+          }`}>
+            {isUp ? "Up" : isDown ? "Down" : "?"}
           </span>
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="text-slate-400 hover:text-slate-600 text-sm cursor-pointer"
-          >
-            {expanded ? "Less" : "More"}
-          </button>
-          <button
-            onClick={() => onDelete(site.url, site.name)}
-            className="text-slate-300 hover:text-red-500 transition-colors cursor-pointer"
-            title="Remove site"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14" />
-            </svg>
-          </button>
         </div>
       </div>
 
-      {/* Uptime badges */}
-      <div className="grid grid-cols-4 gap-3 mb-3 bg-slate-50 rounded-lg p-3">
-        <UptimeBadge label="24h" value={site.uptime["24h"]} />
-        <UptimeBadge label="7d" value={site.uptime["7d"]} />
-        <UptimeBadge label="30d" value={site.uptime["30d"]} />
-        <UptimeBadge label="90d" value={site.uptime["90d"]} />
-      </div>
-
-      {/* Latency + chart */}
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-slate-400">Response Time</span>
-        <span className="text-sm font-semibold text-slate-700">
-          {site.lastLatency ? `${site.lastLatency}ms` : "—"}
-        </span>
-      </div>
-      <MiniChart data={site.responseHistory} />
-
-      {/* Expanded section */}
+      {/* expanded detail */}
       {expanded && (
-        <div className="mt-4 pt-4 border-t border-slate-100 space-y-3">
-          <div className="grid grid-cols-3 gap-3 text-center">
-            <div>
-              <div className="text-[11px] text-slate-400">SLA Target</div>
-              <div className="text-sm font-semibold">{site.sla_target}%</div>
-            </div>
-            <div>
-              <div className="text-[11px] text-slate-400">Total Checks</div>
-              <div className="text-sm font-semibold">{site.totalChecks.toLocaleString()}</div>
-            </div>
-            <div>
-              <div className="text-[11px] text-slate-400">Incidents</div>
-              <div className={`text-sm font-semibold ${site.totalIncidents > 0 ? "text-red-600" : ""}`}>
-                {site.totalIncidents}
+        <div className="border-t border-gray-100 px-4 py-4 bg-gray-50/50">
+          {/* uptime stats */}
+          <div className="grid grid-cols-4 gap-4 mb-4">
+            {(["24h", "7d", "30d", "90d"] as const).map((k) => (
+              <div key={k} className="text-center">
+                <div className={`text-lg font-bold ${uptimeColor(site.uptime[k])}`}>
+                  {site.uptime[k] != null ? `${site.uptime[k]!.toFixed(2)}%` : "—"}
+                </div>
+                <div className="text-[10px] text-gray-400 uppercase">{k} uptime</div>
               </div>
-            </div>
+            ))}
           </div>
 
-          <div className="grid grid-cols-2 gap-3 text-center bg-slate-50 rounded-lg p-3">
-            <div>
-              <div className="text-[11px] text-slate-400">Avg Latency (24h)</div>
-              <div className="text-sm font-bold">
-                {site.avgLatency["24h"] ? `${site.avgLatency["24h"]}ms` : "—"}
-              </div>
+          {/* response time chart */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs text-gray-400">Response Time</span>
+              <span className="text-xs text-gray-400">
+                avg {site.avgLatency["24h"] ? `${site.avgLatency["24h"]}ms` : "—"} (24h)
+              </span>
             </div>
-            <div>
-              <div className="text-[11px] text-slate-400">Avg Latency (7d)</div>
-              <div className="text-sm font-bold">
-                {site.avgLatency["7d"] ? `${site.avgLatency["7d"]}ms` : "—"}
-              </div>
-            </div>
+            <UptimeBar data={site.responseHistory} />
           </div>
 
-          {site.regionCheck && (
-            <div className="bg-slate-50 rounded-lg p-3">
-              <div className="text-[11px] text-slate-400 mb-1">Multi-Region Status</div>
-              <div className="text-xs text-slate-600">
-                {(site.regionCheck as Record<string, Record<string, unknown>>)?.ipBlockAnalysis
-                  ? String(
-                      (site.regionCheck as Record<string, Record<string, string>>).ipBlockAnalysis
-                        ?.analysis || "No data"
-                    )
-                  : "No region data"}
+          {/* recent events */}
+          <div className="mb-4">
+            <div className="text-xs text-gray-400 mb-2">Recent Events</div>
+            {site.recentIncidents.length === 0 && !site.currentIncident && (
+              <div className="text-xs text-gray-300">No incidents recorded</div>
+            )}
+            {site.currentIncident && (
+              <div className="flex items-center gap-2 text-xs bg-red-50 text-red-700 px-3 py-2 rounded mb-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                <span className="font-medium">Ongoing</span>
+                <span className="text-red-400">since {new Date(String(site.currentIncident.startedAt)).toLocaleString()}</span>
+                <span className="text-red-400 ml-auto">{String(site.currentIncident.error || "")}</span>
               </div>
-            </div>
-          )}
-
-          {site.recentIncidents.length > 0 && (
-            <div>
-              <div className="text-[11px] text-slate-400 mb-2">Recent Incidents</div>
-              <div className="space-y-1">
-                {site.recentIncidents.map((inc, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between text-xs bg-red-50 rounded px-3 py-2"
-                  >
-                    <span className="text-slate-600">
-                      {new Date(String(inc.startedAt)).toLocaleString()}
-                    </span>
-                    <span className="text-slate-500">{String(inc.error || "Unknown")}</span>
-                    <span className={inc.endedAt ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
-                      {inc.endedAt ? "Resolved" : "Ongoing"}
-                    </span>
-                  </div>
-                ))}
+            )}
+            {site.recentIncidents.slice(0, 5).map((inc, i) => (
+              <div key={i} className="flex items-center gap-2 text-xs px-3 py-1.5 rounded mb-0.5 bg-gray-100 text-gray-600">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                <span>Resolved</span>
+                <span className="text-gray-400">{new Date(String(inc.startedAt)).toLocaleString()}</span>
+                <span className="text-gray-400 ml-auto">{String(inc.error || "")}</span>
               </div>
-            </div>
-          )}
+            ))}
+          </div>
 
-          {site.lastChecked && (
-            <div className="text-[11px] text-slate-400 text-right">
-              Last checked: {new Date(site.lastChecked).toLocaleString()}
+          {/* meta + actions */}
+          <div className="flex items-center justify-between">
+            <div className="text-[10px] text-gray-300 space-x-3">
+              <span>{site.totalChecks.toLocaleString()} checks</span>
+              <span>{site.totalIncidents} incident{site.totalIncidents !== 1 ? "s" : ""}</span>
+              {site.lastChecked && <span>checked {timeAgo(site.lastChecked)}</span>}
             </div>
-          )}
+            <button
+              onClick={(e) => { e.stopPropagation(); onRemove(); }}
+              className="text-xs text-gray-300 hover:text-red-500 transition-colors cursor-pointer"
+            >
+              Remove
+            </button>
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-function AddSiteForm({
-  onClose,
-  onAdded,
-}: {
-  onClose: () => void;
-  onAdded: () => void;
-}) {
-  const [name, setName] = useState("");
+// ─── add monitor modal ───
+function AddMonitor({ onClose, onAdded }: { onClose: () => void; onAdded: () => void }) {
   const [url, setUrl] = useState("");
-  const [team, setTeam] = useState("");
-  const [region, setRegion] = useState("global");
-  const [slaTarget, setSlaTarget] = useState("99.9");
-  const [tags, setTags] = useState("");
+  const [name, setName] = useState("");
   const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Auto-generate name from URL
+  const autoName = (u: string) => {
+    try {
+      const h = new URL(u.startsWith("http") ? u : `https://${u}`).hostname;
+      return h.replace("www.", "");
+    } catch {
+      return "";
+    }
+  };
+
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setSubmitting(true);
-
+    setSaving(true);
+    const finalUrl = url.startsWith("http") ? url : `https://${url}`;
+    const finalName = name || autoName(url);
     try {
-      const res = await fetch("/api/sites", {
+      const r = await fetch("/api/sites", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          url: url.startsWith("http") ? url : `https://${url}`,
-          team,
-          region,
-          sla_target: parseFloat(slaTarget),
-          tags: tags
-            .split(",")
-            .map((t) => t.trim())
-            .filter(Boolean),
-          vitals_enabled: true,
-        }),
+        body: JSON.stringify({ name: finalName, url: finalUrl }),
       });
-
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Failed to add site");
-        return;
-      }
+      const d = await r.json();
+      if (!r.ok) { setError(d.error || "Failed"); return; }
       onAdded();
     } catch {
       setError("Network error");
     } finally {
-      setSubmitting(false);
+      setSaving(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 mx-4">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-slate-900">Add Site to Monitor</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-xl cursor-pointer">
-            &times;
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="fixed inset-0 bg-black/30 flex items-start justify-center pt-20 z-50" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 mx-4" onClick={(e) => e.stopPropagation()}>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">New Monitor</h2>
+        <form onSubmit={submit} className="space-y-3">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Site Name <span className="text-red-400">*</span>
-            </label>
+            <label className="block text-sm text-gray-600 mb-1">URL *</label>
+            <input
+              type="text"
+              value={url}
+              onChange={(e) => { setUrl(e.target.value); if (!name) setName(""); }}
+              placeholder="example.com"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              autoFocus
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Friendly Name</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. My Company Website"
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
+              placeholder={autoName(url) || "My Website"}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              URL <span className="text-red-400">*</span>
-            </label>
-            <input
-              type="text"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://example.com"
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Team</label>
-              <input
-                type="text"
-                value={team}
-                onChange={(e) => setTeam(e.target.value)}
-                placeholder="e.g. Frontend Team"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Region</label>
-              <select
-                value={region}
-                onChange={(e) => setRegion(e.target.value)}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="global">Global</option>
-                <option value="us">US</option>
-                <option value="eu">EU</option>
-                <option value="ap">Asia Pacific</option>
-                <option value="in">India</option>
-                <option value="no">Norway</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">SLA Target (%)</label>
-              <input
-                type="number"
-                step="0.1"
-                min="90"
-                max="100"
-                value={slaTarget}
-                onChange={(e) => setSlaTarget(e.target.value)}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Tags</label>
-              <input
-                type="text"
-                value={tags}
-                onChange={(e) => setTags(e.target.value)}
-                placeholder="production, client"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-          </div>
-
-          {error && (
-            <div className="text-red-600 text-sm bg-red-50 rounded-lg px-3 py-2">{error}</div>
-          )}
-
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 cursor-pointer"
-            >
+          {error && <div className="text-red-500 text-sm bg-red-50 rounded-lg px-3 py-2">{error}</div>}
+          <div className="flex justify-end gap-2 pt-2">
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 cursor-pointer">
               Cancel
             </button>
             <button
               type="submit"
-              disabled={submitting}
-              className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors cursor-pointer"
+              disabled={saving}
+              className="bg-green-500 hover:bg-green-600 text-white text-sm font-medium px-5 py-2 rounded-lg disabled:opacity-50 transition-colors cursor-pointer"
             >
-              {submitting ? "Adding..." : "Add Site"}
+              {saving ? "Adding..." : "Create Monitor"}
             </button>
           </div>
         </form>
       </div>
-    </div>
-  );
-}
-
-function AIOpsPanel({ aiops }: { aiops: AIOpsData }) {
-  const [expanded, setExpanded] = useState(false);
-  const health = aiops.summary?.overallHealth || "healthy";
-  const alertCount = aiops.summary?.totalAlerts || 0;
-
-  const healthColor = health === "critical" ? "border-red-300 bg-red-50" : health === "warning" ? "border-orange-300 bg-orange-50" : "border-green-300 bg-green-50";
-  const healthText = health === "critical" ? "text-red-700" : health === "warning" ? "text-orange-700" : "text-green-700";
-  const healthLabel = health === "critical" ? "Critical Issues Detected" : health === "warning" ? "Warnings Detected" : "All Systems Healthy";
-  const healthIcon = health === "critical" ? "!!" : health === "warning" ? "!" : "OK";
-
-  return (
-    <div className={`rounded-xl border p-5 mb-6 ${healthColor}`}>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <span className={`text-xs font-bold px-2 py-1 rounded ${health === "healthy" ? "bg-green-200 text-green-800" : health === "warning" ? "bg-orange-200 text-orange-800" : "bg-red-200 text-red-800"}`}>
-            AIOps {healthIcon}
-          </span>
-          <span className={`font-semibold ${healthText}`}>{healthLabel}</span>
-          {alertCount > 0 && (
-            <span className="text-xs bg-white/60 rounded-full px-2 py-0.5 text-slate-600">
-              {alertCount} alert{alertCount !== 1 ? "s" : ""}
-            </span>
-          )}
-        </div>
-        <button onClick={() => setExpanded(!expanded)} className="text-sm text-slate-500 hover:text-slate-700 cursor-pointer">
-          {expanded ? "Collapse" : "Details"}
-        </button>
-      </div>
-
-      {/* Root Cause Hypothesis */}
-      {aiops.rootCauseAnalysis && (
-        <div className="text-sm text-slate-700 mb-2">
-          <span className="font-medium">RCA:</span> {aiops.rootCauseAnalysis.hypothesis}
-        </div>
-      )}
-
-      {/* Critical Alerts Summary */}
-      {aiops.criticalAlerts?.length > 0 && (
-        <div className="space-y-1 mb-2">
-          {aiops.criticalAlerts.slice(0, 3).map((alert, i) => (
-            <div key={i} className={`text-xs px-3 py-1.5 rounded ${alert.severity === "critical" ? "bg-red-100 text-red-700" : "bg-orange-100 text-orange-700"}`}>
-              {alert.site && <span className="font-semibold">{alert.site}: </span>}
-              {alert.message}
-            </div>
-          ))}
-          {aiops.criticalAlerts.length > 3 && (
-            <div className="text-xs text-slate-500">+{aiops.criticalAlerts.length - 3} more</div>
-          )}
-        </div>
-      )}
-
-      {/* Expanded: Per-site details */}
-      {expanded && (
-        <div className="mt-4 pt-4 border-t border-slate-200/50 space-y-4">
-          {/* External Services */}
-          {aiops.rootCauseAnalysis?.externalServices?.length > 0 && (
-            <div>
-              <div className="text-xs font-semibold text-slate-500 mb-2">External Services</div>
-              <div className="flex gap-2 flex-wrap">
-                {aiops.rootCauseAnalysis.externalServices.map((svc, i) => (
-                  <span key={i} className={`text-xs px-2 py-1 rounded-full ${svc.hasIssues ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
-                    {svc.name}: {svc.description}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Per-site predictions */}
-          {Object.entries(aiops.sites || {}).map(([url, siteAI]) => (
-            <div key={url} className="bg-white/60 rounded-lg p-3">
-              <div className="font-semibold text-sm text-slate-800 mb-2">{siteAI.siteName}</div>
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                {/* Latency prediction */}
-                <div>
-                  <div className="text-slate-400 mb-0.5">Latency Forecast</div>
-                  <div className={siteAI.predictions.latency.severity === "critical" ? "text-red-600 font-medium" : siteAI.predictions.latency.severity === "warning" ? "text-orange-600 font-medium" : "text-slate-600"}>
-                    {siteAI.predictions.latency.reason}
-                  </div>
-                </div>
-                {/* SLA prediction */}
-                <div>
-                  <div className="text-slate-400 mb-0.5">SLA Forecast</div>
-                  <div className={siteAI.predictions.sla.severity === "critical" ? "text-red-600 font-medium" : siteAI.predictions.sla.severity === "warning" ? "text-orange-600 font-medium" : "text-slate-600"}>
-                    {siteAI.predictions.sla.reason}
-                  </div>
-                </div>
-              </div>
-              {/* Anomalies */}
-              {siteAI.anomalies.anomalies.length > 0 && (
-                <div className="mt-2">
-                  <div className="text-slate-400 text-xs mb-1">Anomalies</div>
-                  {siteAI.anomalies.anomalies.map((a, i) => (
-                    <div key={i} className={`text-xs px-2 py-1 rounded mb-1 ${a.severity === "critical" ? "bg-red-50 text-red-700" : a.severity === "warning" ? "bg-orange-50 text-orange-700" : "bg-slate-50 text-slate-600"}`}>
-                      {a.message}
-                    </div>
-                  ))}
-                </div>
-              )}
-              {siteAI.anomalies.timeContext && (
-                <div className="text-xs text-slate-400 mt-1">{siteAI.anomalies.timeContext}</div>
-              )}
-              {siteAI.historicalMatch && (
-                <div className="text-xs text-orange-600 mt-1">{siteAI.historicalMatch.message}</div>
-              )}
-            </div>
-          ))}
-
-          {/* Causal Chain */}
-          {aiops.rootCauseAnalysis?.causalChain && (
-            <div>
-              <div className="text-xs font-semibold text-slate-500 mb-2">Causal Chain</div>
-              <div className="flex items-center gap-2 flex-wrap">
-                {aiops.rootCauseAnalysis.causalChain.chain.map((node, i) => (
-                  <div key={i} className="flex items-center gap-1">
-                    {i > 0 && <span className="text-slate-300">&rarr;</span>}
-                    <span className={`text-xs px-2 py-1 rounded ${node.position === "origin" ? "bg-red-100 text-red-700 font-medium" : "bg-orange-100 text-orange-700"}`}>
-                      {node.site}
-                      {node.delay != null && <span className="text-[10px] text-slate-400 ml-1">(+{Math.round(node.delay / 1000)}s)</span>}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* RCA Findings */}
-          {aiops.rootCauseAnalysis?.findings?.length > 0 && (
-            <div>
-              <div className="text-xs font-semibold text-slate-500 mb-2">Findings</div>
-              {aiops.rootCauseAnalysis.findings.map((f, i) => (
-                <div key={i} className={`text-xs px-3 py-2 rounded mb-1 ${f.severity === "critical" ? "bg-red-50 text-red-700" : "bg-orange-50 text-orange-700"}`}>
-                  <span className="font-medium">[{f.type}]</span> {f.finding}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {aiops.timestamp && (
-            <div className="text-[10px] text-slate-400 text-right">
-              Analysis: {new Date(aiops.timestamp).toLocaleString()}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function SecurityPanel({ security }: { security: SecurityData }) {
-  const [expanded, setExpanded] = useState(false);
-  const [selectedSite, setSelectedSite] = useState<string | null>(null);
-
-  const risk = security.overall?.worstRiskLevel || "low";
-  const riskColor = risk === "critical" ? "border-red-300 bg-red-50" : risk === "high" ? "border-orange-300 bg-orange-50" : risk === "medium" ? "border-yellow-300 bg-yellow-50" : "border-green-300 bg-green-50";
-  const riskText = risk === "critical" ? "text-red-700" : risk === "high" ? "text-orange-700" : risk === "medium" ? "text-yellow-700" : "text-green-700";
-  const riskLabel = risk === "low" ? "No Issues Found" : `${risk.charAt(0).toUpperCase() + risk.slice(1)} Risk`;
-
-  const siteEntries = Object.entries(security.sites || {});
-
-  return (
-    <div className={`rounded-xl border p-5 mb-6 ${riskColor}`}>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <span className={`text-xs font-bold px-2 py-1 rounded ${risk === "low" ? "bg-green-200 text-green-800" : risk === "medium" ? "bg-yellow-200 text-yellow-800" : risk === "high" ? "bg-orange-200 text-orange-800" : "bg-red-200 text-red-800"}`}>
-            Security
-          </span>
-          <span className={`font-semibold ${riskText}`}>{riskLabel}</span>
-          <span className="text-xs bg-white/60 rounded-full px-2 py-0.5 text-slate-600">
-            {security.overall?.totalVulnerabilities || 0} vuln{security.overall?.totalVulnerabilities !== 1 ? "s" : ""} &middot; Avg header score: {security.overall?.avgHeaderScore || 0}/100
-          </span>
-        </div>
-        <button onClick={() => setExpanded(!expanded)} className="text-sm text-slate-500 hover:text-slate-700 cursor-pointer">
-          {expanded ? "Collapse" : "Details"}
-        </button>
-      </div>
-
-      {/* Quick summary per site */}
-      <div className="flex gap-2 flex-wrap">
-        {siteEntries.map(([url, result]) => {
-          const rc = result.riskLevel;
-          const c = rc === "critical" ? "bg-red-100 text-red-700 border-red-200" : rc === "high" ? "bg-orange-100 text-orange-700 border-orange-200" : rc === "medium" ? "bg-yellow-100 text-yellow-700 border-yellow-200" : "bg-green-100 text-green-700 border-green-200";
-          return (
-            <button key={url} onClick={() => { setSelectedSite(selectedSite === url ? null : url); setExpanded(true); }}
-              className={`text-xs px-3 py-1.5 rounded-lg border cursor-pointer ${c} ${selectedSite === url ? "ring-2 ring-slate-400" : ""}`}>
-              {result.site}: {result.summary.vulnerabilities} vulns, headers {result.headers.score}/100
-            </button>
-          );
-        })}
-      </div>
-
-      {expanded && (
-        <div className="mt-4 pt-4 border-t border-slate-200/50 space-y-3">
-          {siteEntries.filter(([url]) => !selectedSite || url === selectedSite).map(([url, result]) => (
-            <div key={url} className="bg-white/60 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="font-semibold text-sm text-slate-800">{result.site}</div>
-                <div className="flex gap-2 text-xs">
-                  <span className="bg-slate-100 rounded px-2 py-0.5">{result.summary.endpointsChecked} endpoints checked</span>
-                  <span className={`rounded px-2 py-0.5 ${result.summary.critical > 0 ? "bg-red-100 text-red-700" : result.summary.high > 0 ? "bg-orange-100 text-orange-700" : "bg-green-100 text-green-700"}`}>
-                    {result.summary.critical} critical, {result.summary.high} high, {result.summary.medium} medium
-                  </span>
-                </div>
-              </div>
-
-              {/* Vulnerabilities */}
-              {result.vulnerabilities.length > 0 && (
-                <div className="mb-3">
-                  <div className="text-xs font-semibold text-slate-500 mb-1">Vulnerabilities</div>
-                  {result.vulnerabilities.map((v, i) => (
-                    <div key={i} className={`text-xs px-3 py-2 rounded mb-1 ${v.severity === "critical" ? "bg-red-50 text-red-800 border border-red-200" : v.severity === "high" ? "bg-orange-50 text-orange-800 border border-orange-200" : "bg-yellow-50 text-yellow-800 border border-yellow-200"}`}>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`font-bold uppercase text-[10px] px-1.5 py-0.5 rounded ${v.severity === "critical" ? "bg-red-200" : v.severity === "high" ? "bg-orange-200" : "bg-yellow-200"}`}>{v.severity}</span>
-                        <span className="font-semibold">{v.name}</span>
-                        <span className="text-slate-400 font-mono">{v.path} → HTTP {v.status}</span>
-                      </div>
-                      <div>{v.finding}</div>
-                      <div className="mt-1 text-slate-600 italic">Fix: {v.recommendation}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {result.vulnerabilities.length === 0 && (
-                <div className="text-xs text-green-600 mb-3">No vulnerable endpoints found.</div>
-              )}
-
-              {/* Exposed endpoints (informational) */}
-              {result.exposedEndpoints.length > 0 && (
-                <div className="mb-3">
-                  <div className="text-xs font-semibold text-slate-500 mb-1">Exposed Endpoints (Info)</div>
-                  {result.exposedEndpoints.map((e, i) => (
-                    <div key={i} className="text-xs bg-blue-50 text-blue-800 px-3 py-1.5 rounded mb-1">
-                      {e.name} ({e.path}) — {e.finding}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Security Headers */}
-              <div className="mb-2">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-semibold text-slate-500">Security Headers</span>
-                  <span className={`text-xs font-bold ${result.headers.score >= 70 ? "text-green-600" : result.headers.score >= 40 ? "text-orange-600" : "text-red-600"}`}>
-                    Score: {result.headers.score}/100
-                  </span>
-                </div>
-                <div className="bg-slate-200 rounded-full h-2 overflow-hidden mb-2">
-                  <div className={`h-full rounded-full ${result.headers.score >= 70 ? "bg-green-500" : result.headers.score >= 40 ? "bg-orange-400" : "bg-red-500"}`}
-                    style={{ width: `${result.headers.score}%` }} />
-                </div>
-                {result.headers.missing.length > 0 && (
-                  <div className="space-y-1">
-                    {result.headers.missing.map((h, i) => (
-                      <div key={i} className={`text-xs px-2 py-1 rounded ${h.severity === "high" ? "bg-orange-50 text-orange-700" : "bg-yellow-50 text-yellow-700"}`}>
-                        Missing: <span className="font-semibold">{h.name}</span> — {h.recommendation}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Info disclosures */}
-              {result.headers.disclosures.length > 0 && (
-                <div>
-                  <div className="text-xs font-semibold text-slate-500 mb-1">Information Disclosure</div>
-                  {result.headers.disclosures.map((d, i) => (
-                    <div key={i} className="text-xs bg-slate-50 text-slate-600 px-2 py-1 rounded mb-1">
-                      <span className="font-mono">{d.header}: {d.value}</span> — {d.recommendation}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-
-          {security.timestamp && (
-            <div className="text-[10px] text-slate-400 text-right">
-              Last scan: {new Date(security.timestamp).toLocaleString()}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }

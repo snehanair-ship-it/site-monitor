@@ -1,72 +1,54 @@
 import { NextRequest, NextResponse } from "next/server";
 import { loadConfig, saveConfig, SiteConfig } from "@/lib/config";
 
-// GET /api/sites — list all sites
+// GET /api/sites
 export async function GET() {
   const config = loadConfig();
-  return NextResponse.json({ sites: config.sites || [], teams: config.teams || {} });
+  return NextResponse.json({ sites: config.sites || [] });
 }
 
-// POST /api/sites — add a new site
+// POST /api/sites — just name + url needed
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { name, url, team, region, sla_target, tags, vitals_enabled } = body;
+  const { name, url } = body;
 
-  if (!name || !url) {
-    return NextResponse.json({ error: "Name and URL are required" }, { status: 400 });
+  if (!url) {
+    return NextResponse.json({ error: "URL is required" }, { status: 400 });
   }
 
-  // Validate URL
-  try {
-    new URL(url);
-  } catch {
+  let finalUrl = url;
+  if (!finalUrl.startsWith("http")) finalUrl = `https://${finalUrl}`;
+
+  try { new URL(finalUrl); } catch {
     return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
   }
 
   const config = loadConfig();
 
-  // Check if URL already exists
-  if (config.sites.some((s) => s.url === url)) {
-    return NextResponse.json({ error: "Site already exists" }, { status: 409 });
+  if (config.sites.some((s) => s.url === finalUrl)) {
+    return NextResponse.json({ error: "Already monitoring this URL" }, { status: 409 });
   }
 
+  const friendlyName = name || new URL(finalUrl).hostname.replace("www.", "");
+
   const newSite: SiteConfig = {
-    name,
-    url,
-    region: region || "global",
-    team: team || "default",
-    sla_target: sla_target || 99.9,
+    name: friendlyName,
+    url: finalUrl,
+    region: "global",
+    team: "default",
+    sla_target: 99.9,
     check_endpoints: [{ path: "/", method: "GET", expected_status: 200 }],
     auth: null,
-    tags: tags || [],
-    vitals_enabled: vitals_enabled !== false,
+    tags: [],
+    vitals_enabled: true,
   };
 
   config.sites.push(newSite);
-
-  // Auto-create team if it doesn't exist
-  const teamId = (team || "default").toLowerCase().replace(/[^a-z0-9]+/g, "-");
-  if (!config.teams[teamId]) {
-    config.teams[teamId] = {
-      name: team || "Default",
-      members: [],
-      slack_webhook: "",
-      escalation: {
-        level_1_after_minutes: 0,
-        level_2_after_minutes: 10,
-        level_3_after_minutes: 30,
-      },
-    };
-  }
-
-  // Update the site's team reference to the normalized ID
-  newSite.team = teamId;
-
   saveConfig(config);
   return NextResponse.json({ site: newSite }, { status: 201 });
 }
 
-// DELETE /api/sites — remove a site
+// DELETE /api/sites
 export async function DELETE(req: NextRequest) {
   const body = await req.json();
   const { url } = body;
