@@ -139,17 +139,24 @@
           "status": 200,
           "latency": 354,
           "error": null
+        },
+        {
+          "timestamp": "2026-03-31T22:04:34.550Z",
+          "success": true,
+          "status": 200,
+          "latency": 324,
+          "error": null
         }
       ],
       "incidents": [],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 4,
-        "successfulChecks": 4
+        "totalChecks": 5,
+        "successfulChecks": 5
       }
     }
   },
-  "lastUpdated": "2026-03-31T20:06:55.880Z",
+  "lastUpdated": "2026-03-31T22:04:38.905Z",
   "regionChecks": {
     "https://preikestolenbasecamp.com": [
       {
@@ -3079,6 +3086,25 @@
           ],
           "unexpectedBlocks": []
         }
+      },
+      {
+        "timestamp": "2026-03-31T22:04:34.979Z",
+        "runnerIP": "172.172.157.4",
+        "direct": {
+          "reachable": true,
+          "status": 200,
+          "latency": 249,
+          "error": null
+        },
+        "globalCheck": {
+          "checked": false,
+          "results": []
+        },
+        "ipBlockAnalysis": {
+          "blocked": false,
+          "analysis": "No multi-region data available.",
+          "severity": "info"
+        }
       }
     ]
   },
@@ -3108,21 +3134,15 @@
     },
     "rootCauseAnalysis": {
       "severity": "critical",
-      "hypothesis": "External service issue: Cloudflare, GitHub. Monitor their status pages for resolution.",
+      "hypothesis": "External service issue: Cloudflare. Monitor their status pages for resolution.",
       "findings": [
         {
           "type": "external_service_issue",
           "severity": "critical",
-          "finding": "External service issue detected: Cloudflare (Minor Service Outage), GitHub (Minor Service Outage).",
+          "finding": "External service issue detected: Cloudflare (Minor Service Outage).",
           "services": [
             {
               "name": "Cloudflare",
-              "status": "minor",
-              "description": "Minor Service Outage",
-              "hasIssues": true
-            },
-            {
-              "name": "GitHub",
               "status": "minor",
               "description": "Minor Service Outage",
               "hasIssues": true
@@ -3136,22 +3156,16 @@
           "status": "minor",
           "description": "Minor Service Outage",
           "hasIssues": true
-        },
-        {
-          "name": "GitHub",
-          "status": "minor",
-          "description": "Minor Service Outage",
-          "hasIssues": true
         }
       ],
       "causalChain": null,
-      "timestamp": "2026-03-31T20:06:52.876Z"
+      "timestamp": "2026-03-31T22:04:35.642Z"
     },
     "criticalAlerts": [
       {
         "type": "external_service_issue",
         "severity": "critical",
-        "message": "External service issue detected: Cloudflare (Minor Service Outage), GitHub (Minor Service Outage)."
+        "message": "External service issue detected: Cloudflare (Minor Service Outage)."
       }
     ],
     "summary": {
@@ -3160,7 +3174,7 @@
       "totalAlerts": 1,
       "overallHealth": "critical"
     },
-    "timestamp": "2026-03-31T20:06:52.876Z"
+    "timestamp": "2026-03-31T22:04:35.642Z"
   },
   "_security": {
     "sites": {
@@ -3168,8 +3182,8 @@
         "site": "kodework",
         "url": "https://kodework.com",
         "riskLevel": "medium",
-        "scanDuration": 3002,
-        "timestamp": "2026-03-31T20:06:55.880Z",
+        "scanDuration": 3260,
+        "timestamp": "2026-03-31T22:04:38.904Z",
         "vulnerabilities": [],
         "exposedEndpoints": [],
         "headers": {
@@ -3240,6 +3254,6 @@
       "worstRiskLevel": "medium",
       "avgHeaderScore": 0
     },
-    "timestamp": "2026-03-31T20:06:55.880Z"
+    "timestamp": "2026-03-31T22:04:38.905Z"
   }
 }
