@@ -167,6 +167,13 @@
           "status": 200,
           "latency": 258,
           "error": null
+        },
+        {
+          "timestamp": "2026-04-01T14:52:13.820Z",
+          "success": true,
+          "status": 200,
+          "latency": 325,
+          "error": null
         }
       ],
       "incidents": [
@@ -183,8 +190,8 @@
       ],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 8,
-        "successfulChecks": 7
+        "totalChecks": 9,
+        "successfulChecks": 8
       }
     },
     "https://creometric.com": {
@@ -204,17 +211,24 @@
           "status": 200,
           "latency": 255,
           "error": null
+        },
+        {
+          "timestamp": "2026-04-01T14:52:13.918Z",
+          "success": true,
+          "status": 200,
+          "latency": 376,
+          "error": null
         }
       ],
       "incidents": [],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 2,
-        "successfulChecks": 2
+        "totalChecks": 3,
+        "successfulChecks": 3
       }
     }
   },
-  "lastUpdated": "2026-04-01T10:15:49.584Z",
+  "lastUpdated": "2026-04-01T14:52:13.919Z",
   "regionChecks": {
     "https://preikestolenbasecamp.com": [
       {
