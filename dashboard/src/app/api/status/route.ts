@@ -50,6 +50,7 @@ export async function GET() {
       region: sc.region,
       tags: sc.tags || [],
       sla_target: sc.sla_target,
+      alert_emails: sc.alert_emails || [],
       currentStatus: last ? (last.success ? "up" : "down") : "unknown",
       lastChecked: last?.timestamp || null,
       lastLatency: last?.latency || null,

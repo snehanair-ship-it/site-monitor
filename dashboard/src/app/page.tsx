@@ -20,6 +20,7 @@ interface SiteStatus {
   recentIncidents: Record<string, unknown>[];
   responseHistory: { t: string; l: number }[];
   regionCheck: Record<string, unknown> | null;
+  alert_emails: string[];
 }
 
 interface StatusResponse {
@@ -361,8 +362,11 @@ function MonitorRow({
             })}
           </div>
 
+          {/* alert emails */}
+          <AlertEmailEditor url={site.url} emails={site.alert_emails || []} />
+
           {/* meta + actions */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mt-3">
             <div className="text-[10px] text-gray-300 space-x-3">
               <span>{site.totalChecks.toLocaleString()} checks</span>
               <span>{site.totalIncidents} incident{site.totalIncidents !== 1 ? "s" : ""}</span>
@@ -381,21 +385,77 @@ function MonitorRow({
   );
 }
 
+// ─── inline email editor (shown in expanded row) ───
+function AlertEmailEditor({ url, emails }: { url: string; emails: string[] }) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(emails.join(", "));
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    setSaving(true);
+    const list = value.split(/[,;\n]/).map(e => e.trim()).filter(e => e.includes("@"));
+    await fetch("/api/sites", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url, alert_emails: list }),
+    });
+    setSaving(false);
+    setEditing(false);
+  };
+
+  return (
+    <div className="mb-2">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-xs text-gray-400">Alert Emails</span>
+        {!editing && (
+          <button onClick={(e) => { e.stopPropagation(); setEditing(true); }} className="text-xs text-green-500 hover:underline cursor-pointer">
+            {emails.length > 0 ? "Edit" : "+ Add emails"}
+          </button>
+        )}
+      </div>
+      {!editing ? (
+        emails.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {emails.map((em, i) => (
+              <span key={i} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{em}</span>
+            ))}
+          </div>
+        ) : (
+          <div className="text-xs text-gray-300">No alert emails configured — using global default</div>
+        )
+      ) : (
+        <div onClick={(e) => e.stopPropagation()}>
+          <textarea
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder="email1@example.com, email2@example.com"
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+            rows={2}
+            autoFocus
+          />
+          <div className="flex justify-end gap-2 mt-1">
+            <button onClick={() => setEditing(false)} className="text-xs text-gray-400 hover:text-gray-600 cursor-pointer">Cancel</button>
+            <button onClick={save} disabled={saving} className="text-xs bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 disabled:opacity-50 cursor-pointer">
+              {saving ? "Saving..." : "Save"}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── add monitor modal ───
 function AddMonitor({ onClose, onAdded }: { onClose: () => void; onAdded: () => void }) {
   const [url, setUrl] = useState("");
   const [name, setName] = useState("");
+  const [emails, setEmails] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
-  // Auto-generate name from URL
   const autoName = (u: string) => {
-    try {
-      const h = new URL(u.startsWith("http") ? u : `https://${u}`).hostname;
-      return h.replace("www.", "");
-    } catch {
-      return "";
-    }
+    try { return new URL(u.startsWith("http") ? u : `https://${u}`).hostname.replace("www.", ""); }
+    catch { return ""; }
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -403,12 +463,12 @@ function AddMonitor({ onClose, onAdded }: { onClose: () => void; onAdded: () => 
     setError("");
     setSaving(true);
     const finalUrl = url.startsWith("http") ? url : `https://${url}`;
-    const finalName = name || autoName(url);
+    const emailList = emails.split(/[,;\n]/).map(e => e.trim()).filter(e => e.includes("@"));
     try {
       const r = await fetch("/api/sites", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: finalName, url: finalUrl }),
+        body: JSON.stringify({ name: name || autoName(url), url: finalUrl, alert_emails: emailList }),
       });
       const d = await r.json();
       if (!r.ok) { setError(d.error || "Failed"); return; }
@@ -446,6 +506,17 @@ function AddMonitor({ onClose, onAdded }: { onClose: () => void; onAdded: () => 
               placeholder={autoName(url) || "My Website"}
               className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Alert Emails</label>
+            <textarea
+              value={emails}
+              onChange={(e) => setEmails(e.target.value)}
+              placeholder="sneha@example.com, dev@example.com"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+              rows={2}
+            />
+            <div className="text-[10px] text-gray-400 mt-1">Comma-separated. These people get notified when this site goes down or recovers.</div>
           </div>
           {error && <div className="text-red-500 text-sm bg-red-50 rounded-lg px-3 py-2">{error}</div>}
           <div className="flex justify-end gap-2 pt-2">

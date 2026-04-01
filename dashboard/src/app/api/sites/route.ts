@@ -7,10 +7,10 @@ export async function GET() {
   return NextResponse.json({ sites: config.sites || [] });
 }
 
-// POST /api/sites — just name + url needed
+// POST /api/sites
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { name, url } = body;
+  const { name, url, alert_emails } = body;
 
   if (!url) {
     return NextResponse.json({ error: "URL is required" }, { status: 400 });
@@ -29,10 +29,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Already monitoring this URL" }, { status: 409 });
   }
 
-  const friendlyName = name || new URL(finalUrl).hostname.replace("www.", "");
+  const emails = (alert_emails || [])
+    .map((e: string) => e.trim().toLowerCase())
+    .filter((e: string) => e && e.includes("@"));
 
   const newSite: SiteConfig = {
-    name: friendlyName,
+    name: name || new URL(finalUrl).hostname.replace("www.", ""),
     url: finalUrl,
     region: "global",
     team: "default",
@@ -41,11 +43,36 @@ export async function POST(req: NextRequest) {
     auth: null,
     tags: [],
     vitals_enabled: true,
+    alert_emails: emails,
   };
 
   config.sites.push(newSite);
   saveConfig(config);
   return NextResponse.json({ site: newSite }, { status: 201 });
+}
+
+// PATCH /api/sites — update alert emails for a site
+export async function PATCH(req: NextRequest) {
+  const body = await req.json();
+  const { url, alert_emails } = body;
+
+  if (!url) {
+    return NextResponse.json({ error: "URL is required" }, { status: 400 });
+  }
+
+  const config = loadConfig();
+  const site = config.sites.find((s) => s.url === url);
+
+  if (!site) {
+    return NextResponse.json({ error: "Site not found" }, { status: 404 });
+  }
+
+  site.alert_emails = (alert_emails || [])
+    .map((e: string) => e.trim().toLowerCase())
+    .filter((e: string) => e && e.includes("@"));
+
+  saveConfig(config);
+  return NextResponse.json({ site });
 }
 
 // DELETE /api/sites

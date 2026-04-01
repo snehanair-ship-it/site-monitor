@@ -50,7 +50,7 @@ if (smtpReady) {
   });
 }
 
-const alertTo = (process.env.ALERT_TO || '').split(',').map(e => e.trim()).filter(Boolean);
+const globalAlertTo = (process.env.ALERT_TO || '').split(',').map(e => e.trim()).filter(Boolean);
 
 const state = {};
 
@@ -84,16 +84,24 @@ async function checkSite(url) {
 }
 
 // ── Email alert ──
-async function sendAlert(subject, html) {
-  if (!transporter || !alertTo.length) return;
+function getAlertEmails(site) {
+  // Per-site emails take priority, fall back to global ALERT_TO
+  const siteEmails = (site.alert_emails || []).filter(e => e && e.includes('@'));
+  return siteEmails.length > 0 ? siteEmails : globalAlertTo;
+}
+
+async function sendAlert(subject, html, site) {
+  if (!transporter) return;
+  const recipients = getAlertEmails(site);
+  if (!recipients.length) return;
   try {
     await transporter.sendMail({
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
-      to: alertTo,
+      to: recipients,
       subject,
       html,
     });
-    console.log(`${LOG_PREFIX} Alert sent: ${subject}`);
+    console.log(`${LOG_PREFIX} Alert sent to ${recipients.join(', ')}: ${subject}`);
   } catch (err) {
     console.error(`${LOG_PREFIX} Email failed:`, err.message);
   }
@@ -160,7 +168,8 @@ async function monitorCycle() {
       if (s.downCount === 1 || s.downCount % REPEAT_ALERT === 0) {
         await sendAlert(
           `🔴 DOWN: ${site.name} (${site.url})`,
-          buildDownEmail(site, error, s.downSince, s.downCount)
+          buildDownEmail(site, error, s.downSince, s.downCount),
+          site
         );
       }
     } else {
@@ -170,7 +179,8 @@ async function monitorCycle() {
 
         await sendAlert(
           `✅ UP: ${site.name} is back online (was down ${downDuration})`,
-          buildUpEmail(site, result.detail.latency, s.downSince, downDuration)
+          buildUpEmail(site, result.detail.latency, s.downSince, downDuration),
+          site
         );
       }
       s.downCount = 0;

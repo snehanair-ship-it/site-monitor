@@ -15,6 +15,7 @@ export interface SiteConfig {
   auth: null | Record<string, unknown>;
   tags: string[];
   vitals_enabled: boolean;
+  alert_emails: string[];
 }
 
 export interface TeamConfig {
