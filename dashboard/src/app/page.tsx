@@ -49,6 +49,16 @@ function uptimeColor(v: number | null) {
   return "text-red-500";
 }
 
+function fmtDur(ms: number) {
+  const s = Math.floor(ms / 1000);
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ${s % 60}s`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ${m % 60}m`;
+  return `${Math.floor(h / 24)}d ${h % 24}h`;
+}
+
 function latencyLabel(ms: number | null) {
   if (ms == null) return { text: "—", color: "text-gray-400" };
   if (ms < 300) return { text: `${ms}ms`, color: "text-green-500" };
@@ -305,28 +315,50 @@ function MonitorRow({
             <UptimeBar data={site.responseHistory} />
           </div>
 
-          {/* recent events */}
+          {/* incidents with timestamps and duration */}
           <div className="mb-4">
-            <div className="text-xs text-gray-400 mb-2">Recent Events</div>
+            <div className="text-xs text-gray-400 mb-2">Incidents</div>
             {site.recentIncidents.length === 0 && !site.currentIncident && (
-              <div className="text-xs text-gray-300">No incidents recorded</div>
+              <div className="text-xs text-gray-300">No downtime recorded</div>
             )}
-            {site.currentIncident && (
-              <div className="flex items-center gap-2 text-xs bg-red-50 text-red-700 px-3 py-2 rounded mb-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                <span className="font-medium">Ongoing</span>
-                <span className="text-red-400">since {new Date(String(site.currentIncident.startedAt)).toLocaleString()}</span>
-                <span className="text-red-400 ml-auto">{String(site.currentIncident.error || "")}</span>
-              </div>
-            )}
-            {site.recentIncidents.slice(0, 5).map((inc, i) => (
-              <div key={i} className="flex items-center gap-2 text-xs px-3 py-1.5 rounded mb-0.5 bg-gray-100 text-gray-600">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                <span>Resolved</span>
-                <span className="text-gray-400">{new Date(String(inc.startedAt)).toLocaleString()}</span>
-                <span className="text-gray-400 ml-auto">{String(inc.error || "")}</span>
-              </div>
-            ))}
+            {site.currentIncident && (() => {
+              const since = new Date(String(site.currentIncident.startedAt));
+              const dur = Date.now() - since.getTime();
+              return (
+                <div className="text-xs bg-red-50 border border-red-100 rounded-lg px-4 py-3 mb-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                      <span className="font-semibold text-red-700">Currently Down</span>
+                    </div>
+                    <span className="font-semibold text-red-600">{fmtDur(dur)}</span>
+                  </div>
+                  <div className="text-red-400 mt-1">
+                    Down since {since.toLocaleString()} &middot; {String(site.currentIncident.error || "")}
+                  </div>
+                </div>
+              );
+            })()}
+            {site.recentIncidents.slice(0, 10).map((inc, i) => {
+              const start = new Date(String(inc.startedAt));
+              const end = inc.endedAt ? new Date(String(inc.endedAt)) : null;
+              const durMs = inc.durationMs as number || (end ? end.getTime() - start.getTime() : 0);
+              return (
+                <div key={i} className="text-xs border border-gray-100 rounded-lg px-4 py-2.5 mb-1">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                      <span className="text-gray-700">
+                        {start.toLocaleDateString()} {start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {end && <> → {end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</>}
+                      </span>
+                    </div>
+                    <span className="font-semibold text-gray-500">{durMs ? fmtDur(durMs) : "—"}</span>
+                  </div>
+                  {inc.error ? <div className="text-gray-400 mt-0.5">{String(inc.error)}</div> : null}
+                </div>
+              );
+            })}
           </div>
 
           {/* meta + actions */}

@@ -29,6 +29,18 @@ sites:
     auth: null
     tags: []
     vitals_enabled: true
+  - name: creometric.com
+    url: https://creometric.com
+    region: global
+    team: default
+    sla_target: 99.9
+    check_endpoints:
+      - path: /
+        method: GET
+        expected_status: 200
+    auth: null
+    tags: []
+    vitals_enabled: true
 regions:
   us-east:
     name: US East

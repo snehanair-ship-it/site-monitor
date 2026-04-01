@@ -1,14 +1,11 @@
 {
   "name": "site-monitor",
   "version": "1.0.0",
-  "description": "Organisation-wide site monitor with uptime tracking, multi-region IP block detection, SLA reporting, and status page",
+  "description": "Simple uptime monitor with dashboard",
   "main": "web-monitor.js",
   "scripts": {
     "start": "node web-monitor.js",
     "check": "node web-monitor.js --once",
-    "report": "node web-monitor.js --report",
-    "digest": "node web-monitor.js --digest",
-    "status-page": "node status-page.js",
     "dashboard": "cd dashboard && npm run dev"
   },
   "dependencies": {
