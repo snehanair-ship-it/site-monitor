@@ -16,6 +16,7 @@ export interface SiteConfig {
   tags: string[];
   vitals_enabled: boolean;
   alert_emails: string[];
+  paused?: boolean;
 }
 
 export interface TeamConfig {

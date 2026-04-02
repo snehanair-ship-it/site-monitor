@@ -180,6 +180,10 @@ async function monitorCycle() {
   const data = uptimeStore.loadData();
 
   await Promise.all(sites.map(async site => {
+    if (site.paused) {
+      console.log(`${LOG_PREFIX} ${site.name} PAUSED — skipping`);
+      return;
+    }
     const s = state[site.url] = state[site.url] || { downCount: 0, downSince: null };
     const result = await checkSite(site.url);
 

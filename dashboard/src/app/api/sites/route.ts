@@ -90,10 +90,10 @@ export async function PUT(req: NextRequest) {
   return NextResponse.json({ site });
 }
 
-// PATCH /api/sites — update alert emails only
+// PATCH /api/sites — update alert emails or toggle pause
 export async function PATCH(req: NextRequest) {
   const body = await req.json();
-  const { url, alert_emails } = body;
+  const { url, alert_emails, paused } = body;
 
   if (!url) {
     return NextResponse.json({ error: "URL is required" }, { status: 400 });
@@ -106,9 +106,15 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Site not found" }, { status: 404 });
   }
 
-  site.alert_emails = (alert_emails || [])
-    .map((e: string) => e.trim().toLowerCase())
-    .filter((e: string) => e && e.includes("@"));
+  if (alert_emails !== undefined) {
+    site.alert_emails = (alert_emails || [])
+      .map((e: string) => e.trim().toLowerCase())
+      .filter((e: string) => e && e.includes("@"));
+  }
+
+  if (paused !== undefined) {
+    site.paused = !!paused;
+  }
 
   saveConfig(config);
   return NextResponse.json({ site });
