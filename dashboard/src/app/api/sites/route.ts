@@ -51,7 +51,46 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ site: newSite }, { status: 201 });
 }
 
-// PATCH /api/sites — update alert emails for a site
+// PUT /api/sites — update name, url, and alert emails
+export async function PUT(req: NextRequest) {
+  const body = await req.json();
+  const { original_url, name, url, alert_emails } = body;
+
+  if (!original_url) {
+    return NextResponse.json({ error: "original_url is required" }, { status: 400 });
+  }
+
+  const config = loadConfig();
+  const site = config.sites.find((s) => s.url === original_url);
+
+  if (!site) {
+    return NextResponse.json({ error: "Site not found" }, { status: 404 });
+  }
+
+  // Update URL if changed
+  if (url && url !== original_url) {
+    let finalUrl = url;
+    if (!finalUrl.startsWith("http")) finalUrl = `https://${finalUrl}`;
+    try { new URL(finalUrl); } catch {
+      return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
+    }
+    if (config.sites.some((s) => s.url === finalUrl && s.url !== original_url)) {
+      return NextResponse.json({ error: "URL already exists" }, { status: 409 });
+    }
+    site.url = finalUrl;
+  }
+
+  if (name) site.name = name;
+
+  site.alert_emails = (alert_emails || [])
+    .map((e: string) => e.trim().toLowerCase())
+    .filter((e: string) => e && e.includes("@"));
+
+  saveConfig(config);
+  return NextResponse.json({ site });
+}
+
+// PATCH /api/sites — update alert emails only
 export async function PATCH(req: NextRequest) {
   const body = await req.json();
   const { url, alert_emails } = body;

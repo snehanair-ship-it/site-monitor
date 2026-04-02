@@ -71,6 +71,7 @@ function latencyLabel(ms: number | null) {
 export default function Dashboard() {
   const [status, setStatus] = useState<StatusResponse | null>(null);
   const [showAdd, setShowAdd] = useState(false);
+  const [editSite, setEditSite] = useState<SiteStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<string | null>(null);
 
@@ -175,10 +176,20 @@ export default function Dashboard() {
               expanded={selected === site.url}
               onToggle={() => setSelected(selected === site.url ? null : site.url)}
               onRemove={() => remove(site.url, site.name)}
+              onEdit={() => setEditSite(site)}
             />
           ))}
         </div>
       </div>
+
+      {/* ── edit modal ── */}
+      {editSite && (
+        <EditMonitor
+          site={editSite}
+          onClose={() => setEditSite(null)}
+          onSaved={() => { setEditSite(null); refresh(); }}
+        />
+      )}
 
       {/* ── add modal ── */}
       {showAdd && (
@@ -239,11 +250,13 @@ function MonitorRow({
   expanded,
   onToggle,
   onRemove,
+  onEdit,
 }: {
   site: SiteStatus;
   expanded: boolean;
   onToggle: () => void;
   onRemove: () => void;
+  onEdit: () => void;
 }) {
   const isUp = site.currentStatus === "up";
   const isDown = site.currentStatus === "down";
@@ -372,12 +385,20 @@ function MonitorRow({
               <span>{site.totalIncidents} incident{site.totalIncidents !== 1 ? "s" : ""}</span>
               {site.lastChecked && <span>checked {timeAgo(site.lastChecked)}</span>}
             </div>
-            <button
-              onClick={(e) => { e.stopPropagation(); onRemove(); }}
-              className="text-xs text-gray-300 hover:text-red-500 transition-colors cursor-pointer"
-            >
-              Remove
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={(e) => { e.stopPropagation(); onEdit(); }}
+                className="text-xs text-gray-400 hover:text-green-500 transition-colors cursor-pointer"
+              >
+                Edit
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); onRemove(); }}
+                className="text-xs text-gray-300 hover:text-red-500 transition-colors cursor-pointer"
+              >
+                Remove
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -529,6 +550,98 @@ function AddMonitor({ onClose, onAdded }: { onClose: () => void; onAdded: () => 
               className="bg-green-500 hover:bg-green-600 text-white text-sm font-medium px-5 py-2 rounded-lg disabled:opacity-50 transition-colors cursor-pointer"
             >
               {saving ? "Adding..." : "Create Monitor"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ─── edit monitor modal ───
+function EditMonitor({ site, onClose, onSaved }: { site: SiteStatus; onClose: () => void; onSaved: () => void }) {
+  const [name, setName] = useState(site.name);
+  const [url, setUrl] = useState(site.url);
+  const [emails, setEmails] = useState((site.alert_emails || []).join(", "));
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSaving(true);
+
+    let finalUrl = url;
+    if (!finalUrl.startsWith("http")) finalUrl = `https://${finalUrl}`;
+
+    const emailList = emails.split(/[,;\n]/).map(e => e.trim()).filter(e => e.includes("@"));
+    try {
+      const r = await fetch("/api/sites", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          original_url: site.url,
+          name,
+          url: finalUrl,
+          alert_emails: emailList,
+        }),
+      });
+      const d = await r.json();
+      if (!r.ok) { setError(d.error || "Failed to save"); return; }
+      onSaved();
+    } catch {
+      setError("Network error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/30 flex items-start justify-center pt-20 z-50" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 mx-4" onClick={(e) => e.stopPropagation()}>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Edit Monitor</h2>
+        <form onSubmit={submit} className="space-y-3">
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">URL</label>
+            <input
+              type="text"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Friendly Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Alert Emails</label>
+            <textarea
+              value={emails}
+              onChange={(e) => setEmails(e.target.value)}
+              placeholder="sneha@example.com, dev@example.com"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+              rows={2}
+            />
+            <div className="text-[10px] text-gray-400 mt-1">Comma-separated. Leave empty to use global default.</div>
+          </div>
+          {error && <div className="text-red-500 text-sm bg-red-50 rounded-lg px-3 py-2">{error}</div>}
+          <div className="flex justify-end gap-2 pt-2">
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 cursor-pointer">
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="bg-green-500 hover:bg-green-600 text-white text-sm font-medium px-5 py-2 rounded-lg disabled:opacity-50 transition-colors cursor-pointer"
+            >
+              {saving ? "Saving..." : "Save Changes"}
             </button>
           </div>
         </form>
