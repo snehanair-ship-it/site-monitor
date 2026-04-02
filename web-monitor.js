@@ -83,27 +83,54 @@ async function checkSite(url) {
   }
 }
 
+// ── Telegram ──
+const TG_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
+const TG_CHAT_IDS = (process.env.TELEGRAM_CHAT_IDS || '').split(',').map(s => s.trim()).filter(Boolean);
+
+async function sendTelegram(text) {
+  if (!TG_TOKEN || !TG_CHAT_IDS.length) return;
+  for (const chatId of TG_CHAT_IDS) {
+    try {
+      await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
+      });
+    } catch (err) {
+      console.error(`${LOG_PREFIX} Telegram failed (${chatId}):`, err.message);
+    }
+  }
+  console.log(`${LOG_PREFIX} Telegram sent to ${TG_CHAT_IDS.length} chat(s)`);
+}
+
 // ── Email alert ──
 function getAlertEmails(site) {
-  // Per-site emails take priority, fall back to global ALERT_TO
   const siteEmails = (site.alert_emails || []).filter(e => e && e.includes('@'));
   return siteEmails.length > 0 ? siteEmails : globalAlertTo;
 }
 
-async function sendAlert(subject, html, site) {
-  if (!transporter) return;
-  const recipients = getAlertEmails(site);
-  if (!recipients.length) return;
-  try {
-    await transporter.sendMail({
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
-      to: recipients,
-      subject,
-      html,
-    });
-    console.log(`${LOG_PREFIX} Alert sent to ${recipients.join(', ')}: ${subject}`);
-  } catch (err) {
-    console.error(`${LOG_PREFIX} Email failed:`, err.message);
+async function sendAlert(subject, html, site, telegramText) {
+  // Email
+  if (transporter) {
+    const recipients = getAlertEmails(site);
+    if (recipients.length) {
+      try {
+        await transporter.sendMail({
+          from: process.env.SMTP_FROM || process.env.SMTP_USER,
+          to: recipients,
+          subject,
+          html,
+        });
+        console.log(`${LOG_PREFIX} Email sent to ${recipients.join(', ')}: ${subject}`);
+      } catch (err) {
+        console.error(`${LOG_PREFIX} Email failed:`, err.message);
+      }
+    }
+  }
+
+  // Telegram
+  if (telegramText) {
+    await sendTelegram(telegramText);
   }
 }
 
@@ -166,10 +193,12 @@ async function monitorCycle() {
       console.warn(`${LOG_PREFIX} ${site.name} DOWN (#${s.downCount}) — ${error}`);
 
       if (s.downCount === 1 || s.downCount % REPEAT_ALERT === 0) {
+        const duration = s.downSince ? formatDuration(Date.now() - new Date(s.downSince).getTime()) : '';
         await sendAlert(
           `🔴 DOWN: ${site.name} (${site.url})`,
           buildDownEmail(site, error, s.downSince, s.downCount),
-          site
+          site,
+          `🔴 <b>DOWN: ${site.name}</b>\n${site.url}\n\nError: ${error}\nDown since: ${s.downSince}${duration ? `\nDuration: ${duration}` : ''}\nFailures: ${s.downCount}`
         );
       }
     } else {
@@ -180,7 +209,8 @@ async function monitorCycle() {
         await sendAlert(
           `✅ UP: ${site.name} is back online (was down ${downDuration})`,
           buildUpEmail(site, result.detail.latency, s.downSince, downDuration),
-          site
+          site,
+          `✅ <b>UP: ${site.name}</b>\n${site.url}\n\nRecovered! Was down for ${downDuration}\nLatency: ${result.detail.latency}ms`
         );
       }
       s.downCount = 0;
