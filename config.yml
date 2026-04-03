@@ -41,6 +41,76 @@ sites:
     auth: null
     tags: []
     vitals_enabled: true
+  - name: equinavia.com
+    url: https://equinavia.com
+    region: global
+    team: default
+    sla_target: 99.9
+    check_endpoints:
+      - path: /
+        method: GET
+        expected_status: 200
+    auth: null
+    tags: []
+    vitals_enabled: true
+    alert_emails:
+      - sneha.nair@kilowott.com
+  - name: coo.no
+    url: https://coo.no/
+    region: global
+    team: default
+    sla_target: 99.9
+    check_endpoints:
+      - path: /
+        method: GET
+        expected_status: 200
+    auth: null
+    tags: []
+    vitals_enabled: true
+    alert_emails:
+      - sneha.nair@kilowott.com
+  - name: basecampexplorer.com
+    url: https://basecampexplorer.com/
+    region: global
+    team: default
+    sla_target: 99.9
+    check_endpoints:
+      - path: /
+        method: GET
+        expected_status: 200
+    auth: null
+    tags: []
+    vitals_enabled: true
+    alert_emails:
+      - sneha.nair@kilowott.com
+  - name: norweh.ca
+    url: http://norweh.ca/
+    region: global
+    team: default
+    sla_target: 99.9
+    check_endpoints:
+      - path: /
+        method: GET
+        expected_status: 200
+    auth: null
+    tags: []
+    vitals_enabled: true
+    alert_emails:
+      - sneha.nair@kilowott.com
+  - name: norweh.com
+    url: https://norweh.com/
+    region: global
+    team: default
+    sla_target: 99.9
+    check_endpoints:
+      - path: /
+        method: GET
+        expected_status: 200
+    auth: null
+    tags: []
+    vitals_enabled: true
+    alert_emails:
+      - sneha.nair@kilowott.com
 regions:
   us-east:
     name: US East
