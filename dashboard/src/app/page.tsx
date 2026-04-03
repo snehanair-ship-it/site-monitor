@@ -204,14 +204,50 @@ function UptimeBar24h({ data, uptime }: { data: { t: string; l: number }[]; upti
 // ─── response time chart ───
 function ResponseChart({ data }: { data: { t: string; l: number }[] }) {
   if (data.length < 2) return <div className="text-xs text-gray-600">No data yet</div>;
-  const max = Math.max(...data.map(d => d.l), 1);
+
+  const W = 700, H = 120, PX = 0, PY = 10;
+  const max = Math.max(...data.map(d => d.l), 1) * 1.1;
+  const min = Math.min(...data.map(d => d.l)) * 0.9;
+  const range = max - min || 1;
+
+  const points = data.map((d, i) => {
+    const x = PX + (i / (data.length - 1)) * (W - PX * 2);
+    const y = PY + (1 - (d.l - min) / range) * (H - PY * 2);
+    return { x, y, l: d.l, t: d.t };
+  });
+
+  const line = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
+  const area = `${line} L${points[points.length - 1].x},${H} L${points[0].x},${H} Z`;
+
+  // Color based on average
+  const avg = data.reduce((s, d) => s + d.l, 0) / data.length;
+  const stroke = avg < 500 ? "#22c55e" : avg < 1500 ? "#eab308" : "#ef4444";
+  const fill = avg < 500 ? "#22c55e" : avg < 1500 ? "#eab308" : "#ef4444";
+
   return (
-    <div className="flex items-end gap-[1px] h-16">
-      {data.map((d, i) => {
-        const h = Math.max(4, (d.l / max) * 100);
-        const c = d.l < 500 ? "bg-green-500" : d.l < 1500 ? "bg-yellow-500" : "bg-red-500";
-        return <div key={i} className={`flex-1 ${c} rounded-t-sm`} style={{ height: `${h}%` }} title={`${d.l}ms`} />;
-      })}
+    <div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 120 }}>
+        {/* grid lines */}
+        {[0.25, 0.5, 0.75].map(f => (
+          <line key={f} x1={0} x2={W} y1={PY + f * (H - PY * 2)} y2={PY + f * (H - PY * 2)} stroke="#1f2937" strokeWidth="0.5" />
+        ))}
+        {/* area fill */}
+        <path d={area} fill={fill} opacity="0.08" />
+        {/* line */}
+        <path d={line} fill="none" stroke={stroke} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+        {/* dots */}
+        {points.map((p, i) => (
+          <circle key={i} cx={p.x} cy={p.y} r="3" fill={stroke} opacity="0.8">
+            <title>{`${p.l}ms — ${new Date(p.t).toLocaleTimeString()}`}</title>
+          </circle>
+        ))}
+      </svg>
+      {/* axis labels */}
+      <div className="flex justify-between text-[10px] text-gray-600 mt-1">
+        <span>{data.length > 0 ? new Date(data[0].t).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}</span>
+        <span>{Math.round(avg)}ms avg</span>
+        <span>{data.length > 0 ? new Date(data[data.length - 1].t).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}</span>
+      </div>
     </div>
   );
 }
