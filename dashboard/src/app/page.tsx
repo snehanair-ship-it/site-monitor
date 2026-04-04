@@ -254,7 +254,7 @@ function ResponseChart({ data }: { data: { t: string; l: number }[] }) {
 
 // ─── latency analysis ───
 function LatencyAnalysis({ data, siteName }: { data: { t: string; l: number }[]; siteName: string }) {
-  if (data.length < 3) return null;
+  if (data.length < 2) return null;
 
   const latencies = data.map(d => d.l);
   const avg = Math.round(latencies.reduce((s, l) => s + l, 0) / latencies.length);
