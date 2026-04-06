@@ -633,6 +633,13 @@
           "status": 403,
           "latency": 246,
           "error": null
+        },
+        {
+          "timestamp": "2026-04-06T15:02:21.272Z",
+          "success": false,
+          "status": 403,
+          "latency": 248,
+          "error": null
         }
       ],
       "incidents": [],
@@ -644,10 +651,10 @@
         "endedAt": null,
         "durationMs": null,
         "error": "HTTP 403",
-        "checksDown": 2
+        "checksDown": 3
       },
       "stats": {
-        "totalChecks": 90,
+        "totalChecks": 91,
         "successfulChecks": 88
       }
     },
@@ -1548,6 +1555,13 @@
           "status": 200,
           "latency": 157,
           "error": null
+        },
+        {
+          "timestamp": "2026-04-06T15:02:21.103Z",
+          "success": true,
+          "status": 200,
+          "latency": 129,
+          "error": null
         }
       ],
       "incidents": [
@@ -1564,8 +1578,8 @@
       ],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 120,
-        "successfulChecks": 119
+        "totalChecks": 121,
+        "successfulChecks": 120
       }
     },
     "https://creometric.com": {
@@ -2369,13 +2383,20 @@
           "status": 200,
           "latency": 383,
           "error": null
+        },
+        {
+          "timestamp": "2026-04-06T15:02:21.261Z",
+          "success": true,
+          "status": 200,
+          "latency": 238,
+          "error": null
         }
       ],
       "incidents": [],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 114,
-        "successfulChecks": 114
+        "totalChecks": 115,
+        "successfulChecks": 115
       }
     },
     "https://norweh.com/": {
@@ -2969,13 +2990,20 @@
           "status": 200,
           "latency": 698,
           "error": null
+        },
+        {
+          "timestamp": "2026-04-06T15:02:21.271Z",
+          "success": true,
+          "status": 200,
+          "latency": 243,
+          "error": null
         }
       ],
       "incidents": [],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 84,
-        "successfulChecks": 84
+        "totalChecks": 85,
+        "successfulChecks": 85
       }
     },
     "https://basecampexplorer.com/": {
@@ -3569,13 +3597,20 @@
           "status": 200,
           "latency": 805,
           "error": null
+        },
+        {
+          "timestamp": "2026-04-06T15:02:21.833Z",
+          "success": true,
+          "status": 200,
+          "latency": 807,
+          "error": null
         }
       ],
       "incidents": [],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 84,
-        "successfulChecks": 84
+        "totalChecks": 85,
+        "successfulChecks": 85
       }
     },
     "https://coo.no/": {
@@ -4169,13 +4204,20 @@
           "status": 200,
           "latency": 805,
           "error": null
+        },
+        {
+          "timestamp": "2026-04-06T15:02:21.896Z",
+          "success": true,
+          "status": 200,
+          "latency": 871,
+          "error": null
         }
       ],
       "incidents": [],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 84,
-        "successfulChecks": 84
+        "totalChecks": 85,
+        "successfulChecks": 85
       }
     },
     "http://norweh.ca/": {
@@ -4769,6 +4811,13 @@
           "status": 200,
           "latency": 845,
           "error": null
+        },
+        {
+          "timestamp": "2026-04-06T15:02:22.330Z",
+          "success": true,
+          "status": 200,
+          "latency": 1303,
+          "error": null
         }
       ],
       "incidents": [
@@ -4785,12 +4834,12 @@
       ],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 84,
-        "successfulChecks": 83
+        "totalChecks": 85,
+        "successfulChecks": 84
       }
     }
   },
-  "lastUpdated": "2026-04-06T13:59:02.104Z",
+  "lastUpdated": "2026-04-06T15:02:24.319Z",
   "regionChecks": {
     "https://preikestolenbasecamp.com": [
       {
