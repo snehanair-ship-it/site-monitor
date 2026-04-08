@@ -955,6 +955,13 @@
           "status": 403,
           "latency": 337,
           "error": null
+        },
+        {
+          "timestamp": "2026-04-08T23:07:55.850Z",
+          "success": false,
+          "status": 403,
+          "latency": 230,
+          "error": null
         }
       ],
       "incidents": [],
@@ -966,10 +973,10 @@
         "endedAt": null,
         "durationMs": null,
         "error": "HTTP 403",
-        "checksDown": 48
+        "checksDown": 49
       },
       "stats": {
-        "totalChecks": 136,
+        "totalChecks": 137,
         "successfulChecks": 88
       }
     },
@@ -2192,6 +2199,13 @@
           "status": 200,
           "latency": 307,
           "error": null
+        },
+        {
+          "timestamp": "2026-04-08T23:07:55.703Z",
+          "success": true,
+          "status": 200,
+          "latency": 132,
+          "error": null
         }
       ],
       "incidents": [
@@ -2218,8 +2232,8 @@
       ],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 166,
-        "successfulChecks": 164
+        "totalChecks": 167,
+        "successfulChecks": 165
       }
     },
     "https://creometric.com": {
@@ -3345,13 +3359,20 @@
           "status": 200,
           "latency": 414,
           "error": null
+        },
+        {
+          "timestamp": "2026-04-08T23:07:55.901Z",
+          "success": true,
+          "status": 200,
+          "latency": 282,
+          "error": null
         }
       ],
       "incidents": [],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 160,
-        "successfulChecks": 160
+        "totalChecks": 161,
+        "successfulChecks": 161
       }
     },
     "https://norweh.com/": {
@@ -4267,13 +4288,20 @@
           "status": 200,
           "latency": 389,
           "error": null
+        },
+        {
+          "timestamp": "2026-04-08T23:07:55.954Z",
+          "success": true,
+          "status": 200,
+          "latency": 331,
+          "error": null
         }
       ],
       "incidents": [],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 130,
-        "successfulChecks": 130
+        "totalChecks": 131,
+        "successfulChecks": 131
       }
     },
     "https://basecampexplorer.com/": {
@@ -5189,13 +5217,20 @@
           "status": 200,
           "latency": 686,
           "error": null
+        },
+        {
+          "timestamp": "2026-04-08T23:07:56.417Z",
+          "success": true,
+          "status": 200,
+          "latency": 795,
+          "error": null
         }
       ],
       "incidents": [],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 130,
-        "successfulChecks": 130
+        "totalChecks": 131,
+        "successfulChecks": 131
       }
     },
     "https://coo.no/": {
@@ -6111,6 +6146,13 @@
           "status": 200,
           "latency": 841,
           "error": null
+        },
+        {
+          "timestamp": "2026-04-08T23:07:56.473Z",
+          "success": true,
+          "status": 200,
+          "latency": 852,
+          "error": null
         }
       ],
       "incidents": [
@@ -6127,8 +6169,8 @@
       ],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 130,
-        "successfulChecks": 129
+        "totalChecks": 131,
+        "successfulChecks": 130
       }
     },
     "http://norweh.ca/": {
@@ -7044,6 +7086,13 @@
           "status": 200,
           "latency": 972,
           "error": null
+        },
+        {
+          "timestamp": "2026-04-08T23:07:56.590Z",
+          "success": true,
+          "status": 200,
+          "latency": 967,
+          "error": null
         }
       ],
       "incidents": [
@@ -7080,12 +7129,12 @@
       ],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 130,
-        "successfulChecks": 127
+        "totalChecks": 131,
+        "successfulChecks": 128
       }
     }
   },
-  "lastUpdated": "2026-04-08T22:22:16.038Z",
+  "lastUpdated": "2026-04-08T23:07:58.281Z",
   "regionChecks": {
     "https://preikestolenbasecamp.com": [
       {
