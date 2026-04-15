@@ -4040,6 +4040,13 @@
           "status": 200,
           "latency": 342,
           "error": null
+        },
+        {
+          "timestamp": "2026-04-15T17:55:42.311Z",
+          "success": true,
+          "status": 200,
+          "latency": 291,
+          "error": null
         }
       ],
       "incidents": [
@@ -4066,8 +4073,8 @@
       ],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 300,
-        "successfulChecks": 298
+        "totalChecks": 301,
+        "successfulChecks": 299
       }
     },
     "https://creometric.com": {
@@ -6131,12 +6138,28 @@
           "status": 200,
           "latency": 664,
           "error": null
+        },
+        {
+          "timestamp": "2026-04-15T17:56:02.069Z",
+          "success": false,
+          "status": null,
+          "latency": null,
+          "error": "This operation was aborted"
         }
       ],
       "incidents": [],
-      "currentIncident": null,
+      "currentIncident": {
+        "id": "inc-1776275762069",
+        "site": "creometric.com",
+        "url": "https://creometric.com",
+        "startedAt": "2026-04-15T17:56:02.069Z",
+        "endedAt": null,
+        "durationMs": null,
+        "error": "This operation was aborted",
+        "checksDown": 1
+      },
       "stats": {
-        "totalChecks": 294,
+        "totalChecks": 295,
         "successfulChecks": 294
       }
     },
@@ -7991,6 +8014,13 @@
           "status": 200,
           "latency": 418,
           "error": null
+        },
+        {
+          "timestamp": "2026-04-15T17:55:42.387Z",
+          "success": true,
+          "status": 200,
+          "latency": 314,
+          "error": null
         }
       ],
       "incidents": [
@@ -8007,8 +8037,8 @@
       ],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 264,
-        "successfulChecks": 263
+        "totalChecks": 265,
+        "successfulChecks": 264
       }
     },
     "https://basecampexplorer.com/": {
@@ -9862,13 +9892,20 @@
           "status": 200,
           "latency": 849,
           "error": null
+        },
+        {
+          "timestamp": "2026-04-15T17:55:42.771Z",
+          "success": true,
+          "status": 200,
+          "latency": 700,
+          "error": null
         }
       ],
       "incidents": [],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 264,
-        "successfulChecks": 264
+        "totalChecks": 265,
+        "successfulChecks": 265
       }
     },
     "https://coo.no/": {
@@ -11722,6 +11759,13 @@
           "status": 200,
           "latency": 802,
           "error": null
+        },
+        {
+          "timestamp": "2026-04-15T17:55:44.488Z",
+          "success": false,
+          "status": null,
+          "latency": null,
+          "error": "fetch failed"
         }
       ],
       "incidents": [
@@ -11746,9 +11790,18 @@
           "checksDown": 1
         }
       ],
-      "currentIncident": null,
+      "currentIncident": {
+        "id": "inc-1776275744488",
+        "site": "coo.no",
+        "url": "https://coo.no/",
+        "startedAt": "2026-04-15T17:55:44.488Z",
+        "endedAt": null,
+        "durationMs": null,
+        "error": "fetch failed",
+        "checksDown": 1
+      },
       "stats": {
-        "totalChecks": 264,
+        "totalChecks": 265,
         "successfulChecks": 262
       }
     },
@@ -13603,6 +13656,13 @@
           "status": 200,
           "latency": 1059,
           "error": null
+        },
+        {
+          "timestamp": "2026-04-15T17:55:42.937Z",
+          "success": true,
+          "status": 200,
+          "latency": 865,
+          "error": null
         }
       ],
       "incidents": [
@@ -13659,12 +13719,12 @@
       ],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 264,
-        "successfulChecks": 259
+        "totalChecks": 265,
+        "successfulChecks": 260
       }
     }
   },
-  "lastUpdated": "2026-04-15T16:46:49.641Z",
+  "lastUpdated": "2026-04-15T17:56:03.489Z",
   "regionChecks": {
     "https://preikestolenbasecamp.com": [
       {
