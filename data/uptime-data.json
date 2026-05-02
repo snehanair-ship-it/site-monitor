@@ -6119,6 +6119,13 @@
           "status": 200,
           "latency": 140,
           "error": null
+        },
+        {
+          "timestamp": "2026-05-02T22:00:54.784Z",
+          "success": true,
+          "status": 200,
+          "latency": 286,
+          "error": null
         }
       ],
       "incidents": [
@@ -6155,8 +6162,8 @@
       ],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 597,
-        "successfulChecks": 594
+        "totalChecks": 598,
+        "successfulChecks": 595
       }
     },
     "https://creometric.com": {
@@ -10299,6 +10306,13 @@
           "status": 200,
           "latency": 210,
           "error": null
+        },
+        {
+          "timestamp": "2026-05-02T22:00:54.788Z",
+          "success": true,
+          "status": 200,
+          "latency": 242,
+          "error": null
         }
       ],
       "incidents": [
@@ -10335,8 +10349,8 @@
       ],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 591,
-        "successfulChecks": 587
+        "totalChecks": 592,
+        "successfulChecks": 588
       }
     },
     "https://norweh.com/": {
@@ -14269,6 +14283,13 @@
           "status": 200,
           "latency": 233,
           "error": null
+        },
+        {
+          "timestamp": "2026-05-02T22:00:54.808Z",
+          "success": true,
+          "status": 200,
+          "latency": 258,
+          "error": null
         }
       ],
       "incidents": [
@@ -14285,8 +14306,8 @@
       ],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 561,
-        "successfulChecks": 560
+        "totalChecks": 562,
+        "successfulChecks": 561
       }
     },
     "https://basecampexplorer.com/": {
@@ -18219,6 +18240,13 @@
           "status": 200,
           "latency": 826,
           "error": null
+        },
+        {
+          "timestamp": "2026-05-02T22:00:55.237Z",
+          "success": true,
+          "status": 200,
+          "latency": 689,
+          "error": null
         }
       ],
       "incidents": [
@@ -18235,8 +18263,8 @@
       ],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 561,
-        "successfulChecks": 560
+        "totalChecks": 562,
+        "successfulChecks": 561
       }
     },
     "https://coo.no/": {
@@ -22169,6 +22197,13 @@
           "status": 200,
           "latency": 1163,
           "error": null
+        },
+        {
+          "timestamp": "2026-05-02T22:00:55.211Z",
+          "success": true,
+          "status": 200,
+          "latency": 664,
+          "error": null
         }
       ],
       "incidents": [
@@ -22245,8 +22280,8 @@
       ],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 561,
-        "successfulChecks": 554
+        "totalChecks": 562,
+        "successfulChecks": 555
       }
     },
     "http://norweh.ca/": {
@@ -26179,6 +26214,13 @@
           "status": 200,
           "latency": 1374,
           "error": null
+        },
+        {
+          "timestamp": "2026-05-02T22:00:55.565Z",
+          "success": true,
+          "status": 200,
+          "latency": 1016,
+          "error": null
         }
       ],
       "incidents": [
@@ -26265,12 +26307,12 @@
       ],
       "currentIncident": null,
       "stats": {
-        "totalChecks": 561,
-        "successfulChecks": 553
+        "totalChecks": 562,
+        "successfulChecks": 554
       }
     }
   },
-  "lastUpdated": "2026-05-02T21:11:00.696Z",
+  "lastUpdated": "2026-05-02T22:00:55.565Z",
   "regionChecks": {
     "https://preikestolenbasecamp.com": [
       {
